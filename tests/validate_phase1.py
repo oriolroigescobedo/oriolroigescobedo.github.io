@@ -27,6 +27,9 @@ for (mime,payload),item in zip(image_data,manifest):
     assert item['mime']==f'image/{mime.lower()}'
 
 # Every HTML byte is unchanged, except for external asset references.
+# Phase 2 adds these passive assets but must not alter any pre-existing markup.
+html=html.replace('  <link rel="stylesheet" href="./cms/editor.css">\n','',1)
+html=html.replace('  <script src="./cms/editor.js"></script>\n','',1)
 normalized=html.replace('<link rel="stylesheet" href="./assets/site.css">',style.group(0),1)
 normalized=normalized.replace('<script src="./cms/content/translations.js"></script>\n  <script src="./assets/site.js"></script>',script.group(0),1)
 for item,(mime,payload) in zip(manifest,image_data):
