@@ -71,9 +71,11 @@ The dynamic sections schema is NOT yet active. This is architecture migration on
 - [x] Existing `assets/site.js`, the 20 image assets and `cms/content/translations.json` left unchanged.
 - [x] Added `tests/editor_phase2.py` and branch-specific `.github/workflows/phase2-editor.yml`; adapted exact original-HTML assertion to ignore only the two added Phase 2 resource tags.
 - [x] Updated `cms/README.md` with usage, limits and security boundary.
-- [ ] CI browser tests must succeed before declaring Phase 2 complete; inspect the most recent `Portfolio CMS phase 2 browser checks` workflow run.
+- [x] Phase 2 CI run **43539500137** passed: 16/16 original-vs-development browser snapshots had zero pixel difference, JS/migration checks succeeded, and interactive editor smoke tests passed across 2 viewport sizes × 4 languages × 2 themes, including save/reload, cancel, preview, language isolation, and HTML sanitization. https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43539500137
 - [ ] Manual browser acceptance still needed for all fixed controls, focus/selection, existing links and complex rich formatting (automated browser tests cover the primary flows).
 
 **Important**: `?cms=edit` is an open URL switch, NOT access control. All drafts are local to the device and are never sent to GitHub. Authentication, private mode and publishing are deferred to Phase 4; do not put credentials in this static site. The initial milestone does not include editing image assets, URLs or adding/reordering sections, which remain Phase 3.
 
-**Next checkpoint**: review Phase 2 CI, resolve any failures on `feature/portfolio-cms-phase-2`, record verified run ID, and ensure `main` remains at `8a51574bd49bb8a28b5a2e8815cc48e491fd0f26` before considering any release.
+**Phase 2 status**: implemented and **automated CI verified**. Manual interaction acceptance and Phase 3 content schema work remain separate next steps. Public release requires explicit approval; do not merge.
+
+**Production safeguard**: rechecked `main` after Phase 2 development; its head remains `8a51574bd49bb8a28b5a2e8815cc48e491fd0f26`.
