@@ -1,0 +1,32 @@
+name: Portfolio CMS phase 2 browser checks
+
+on:
+  push:
+    branches:
+      - feature/portfolio-cms-phase-2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-editor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify syntax and prior migration parity
+        run: |
+          node --check assets/site.js
+          node --check cms/editor.js
+          node --check cms/content/translations.js
+          python3 tests/validate_phase1.py
+      - name: Install browser dependencies
+        run: |
+          python3 -m pip install playwright pillow numpy
+          python3 -m playwright install --with-deps chromium
+      - name: Confirm unchanged portfolio outside editing mode
+        run: python3 tests/browser_parity.py
+      - name: Verify phase 2 editor and draft behaviors
+        run: python3 tests/editor_phase2.py
