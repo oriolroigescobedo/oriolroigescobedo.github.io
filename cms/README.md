@@ -1,5 +1,21 @@
 # Portfolio CMS — architecture and Phase 1 migration
 
+## Phase 3 usage (development branch only)
+
+Open `index.html?cms=edit` using a local HTTP server. Click existing text to edit it directly. Selection also opens **Content manager**, where you can apply rich formatting, change link destinations, change an image URL or upload a raster image, and edit alternative text. Use **Apply** before leaving a panel field. **Save draft** persists the applied changes locally.
+
+**Content** opens the section/entry tree. Use **+ Entry**, **+ Section**, the up/down arrows and **Delete**. Existing component designs are reused automatically. New sections receive unique stable anchors, and the sidebar follows structural order. Home cannot be deleted. Select a compatible organisation/contact link area to add a link.
+
+Switch EN/ES/CA/FR using the original language buttons. New text is blank in untranslated locales and the inspector reports missing translations. URL/image sources and structural order are shared; text and image alt values are localized. Existing Phase 2 static overrides are copied to all four locales during migration to preserve their previous visible behavior; subsequent edits are independent.
+
+**Preview** hides the inspector and selection outlines; use **Edit** to return. **Cancel changes** restores the last saved draft, including structure and images. **Export JSON** downloads the working draft (including unsaved applied changes); **Import JSON** validates it and stages it as an unsaved draft. Invalid versions, duplicate IDs, unknown templates and unsafe URLs are rejected. The original v1 localStorage backup is retained. Draft v3 key: `oriol-cms-draft-v3`.
+
+`content.schema.json` now describes the live v3 envelope. `content.sections` stores stable section/entry identities and trusted template references; `content.fields` stores localized sanitized HTML overrides; `content.attributes` stores URLs and localized image alt text; `content.links` stores added component links. The existing translation-key editing model is retained rather than replaced. Original proposed schema definitions remain available for the future publishing adapter.
+
+The normal public URL does not activate the editor or render local drafts. There is no publication endpoint. Never put secrets in draft JSON or source code. Phase 4 must add authenticated publication and a renderer for the validated draft model. Read the current limitations and verified results in `PROJECT_STATUS.md`.
+
+Validation: `python tests/editor_phase3.py`, `python tests/editor_phase2.py`, `python tests/validate_phase1.py`, `python tests/browser_parity.py`. Install Playwright, Pillow, NumPy and jsonschema plus Chromium. An optional `CMS_BROWSER` environment variable selects an installed Chrome executable. CI uses Playwright Chromium on Linux and uploads Phase 3 screenshots.
+
 ## Source of truth
 The original production portfolio lives in `main:index.html` (commit `8a51574bd49bb8a28b5a2e8815cc48e491fd0f26`). Its exact 3,546,480 bytes were supplied as `index (14).html` and analyzed. It contains 6 page sections, 4 locales, 20 embedded images, and one inline style/script block.
 

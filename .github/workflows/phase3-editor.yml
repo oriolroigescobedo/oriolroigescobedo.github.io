@@ -1,0 +1,34 @@
+name: Portfolio CMS phase 3 browser checks
+on:
+  push:
+    branches: [feature/portfolio-cms-phase-3]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate-editor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Syntax and exact baseline preservation
+        run: |
+          node --check cms/advanced.js
+          node --check cms/editor.js
+          python3 tests/validate_phase1.py
+      - name: Install browsers
+        run: |
+          python3 -m pip install playwright pillow numpy jsonschema
+          python3 -m playwright install --with-deps chromium
+      - name: Advanced editor integration tests
+        run: python3 tests/editor_phase3.py
+      - name: Existing multilingual editor regression
+        run: python3 tests/editor_phase2.py
+      - name: Public portfolio visual parity
+        run: python3 tests/browser_parity.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase3-browser-evidence
+          path: test-results/

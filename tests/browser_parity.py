@@ -26,7 +26,7 @@ with tempfile.TemporaryDirectory() as temp:
  s1=serve(ROOT,8961)
  try:
   with sync_playwright() as p:
-   browser=p.chromium.launch(headless=True)
+   browser=p.chromium.launch(headless=True, executable_path=__import__('os').environ.get('CMS_BROWSER'))
    try:
     for width,height in [(1440,900),(390,844)]:
      for lang in ["en","es","ca","fr"]:
@@ -39,7 +39,8 @@ with tempfile.TemporaryDirectory() as temp:
         page.goto(f"http://127.0.0.1:{port}/index.html",wait_until="networkidle")
         if lang!="en": page.locator(f"#lang{lang.capitalize()}").click()
         if theme=="dark": page.locator("#themeButton").click()
-        page.wait_for_timeout(150)
+        page.evaluate('document.fonts.ready')
+        page.wait_for_timeout(500)
         data=page.evaluate("""() => ({
          text:document.querySelector('main').innerText,
          heading:document.querySelector('#homeHeading').innerHTML,
@@ -57,6 +58,10 @@ with tempfile.TemporaryDirectory() as temp:
        old,new=records
        dom_equal=old[0]==new[0] and not old[2] and not new[2]
        pixels_diff=1.0 if old[1].shape!=new[1].shape else float(np.mean(np.any(np.abs(old[1]-new[1])>1,axis=2)))
+       if pixels_diff:
+        output=ROOT/'test-results';output.mkdir(exist_ok=True)
+        Image.fromarray(old[1].astype(np.uint8)).save(output/f'original-{width}-{lang}-{theme}.png')
+        Image.fromarray(new[1].astype(np.uint8)).save(output/f'current-{width}-{lang}-{theme}.png')
        print(f"{width}px {lang} {theme}: DOM={dom_equal} pixel_diff={pixels_diff:.6f} errors={old[2]} {new[2]}",flush=True)
        results.append({"width":width,"lang":lang,"theme":theme,"dom_equal":dom_equal,"pixel_diff":pixels_diff,"errors_original":old[2],"errors_migrated":new[2]})
    finally:
@@ -64,6 +69,6 @@ with tempfile.TemporaryDirectory() as temp:
  finally:
   s0.shutdown();s1.shutdown()
 (ROOT/"tests/browser-parity-results.json").write_text(json.dumps(results,indent=2)+"\n")
-if not all(r["dom_equal"] and r["pixel_diff"]<0.01 for r in results):
+if not all(r["dom_equal"] and r["pixel_diff"]==0 for r in results):
  sys.exit("FAIL: browser parity differs from original in one or more configurations")
 print("PASS: original vs migrated browser snapshots match in 16 language/viewport/theme configurations.")

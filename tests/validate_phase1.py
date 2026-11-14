@@ -30,6 +30,7 @@ for (mime,payload),item in zip(image_data,manifest):
 # Phase 2 adds these passive assets but must not alter any pre-existing markup.
 html=html.replace('  <link rel="stylesheet" href="./cms/editor.css">\n','',1)
 html=html.replace('  <script src="./cms/editor.js"></script>\n','',1)
+html=html.replace('  <script src="./cms/advanced.js"></script>\n','',1)
 normalized=html.replace('<link rel="stylesheet" href="./assets/site.css">',style.group(0),1)
 normalized=normalized.replace('<script src="./cms/content/translations.js"></script>\n  <script src="./assets/site.js"></script>',script.group(0),1)
 for item,(mime,payload) in zip(manifest,image_data):
@@ -38,7 +39,7 @@ assert normalized==original, 'Unexpected HTML changes'
 
 translations=json.loads((ROOT/'cms/content/translations.json').read_text(encoding='utf8'))
 expression=js[start:end]
-node=subprocess.run(['node','-e',"const vm=require('node:vm');let s='';process.stdin.on('data',b=>s+=b);process.stdin.on('end',()=>process.stdout.write(JSON.stringify(vm.runInNewContext(s+String.fromCharCode(10)+'translations'))))"],input=expression,text=True,capture_output=True,check=True)
+node=subprocess.run(['node','-e',"const vm=require('node:vm');let s='';process.stdin.on('data',b=>s+=b);process.stdin.on('end',()=>process.stdout.write(JSON.stringify(vm.runInNewContext(s+String.fromCharCode(10)+'translations'))))"],input=expression,text=True,encoding='utf8',capture_output=True,check=True)
 assert json.loads(node.stdout)==translations
 assert set(translations)=={'en','es','ca','fr'}
 assert all(len(translations[lang])==100 for lang in translations)

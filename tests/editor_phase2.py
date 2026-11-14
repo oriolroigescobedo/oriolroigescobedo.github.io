@@ -15,7 +15,7 @@ server = ThreadingHTTPServer(("127.0.0.1", 8962), partial(Quiet, directory=str(R
 threading.Thread(target=server.serve_forever, daemon=True).start()
 try:
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, executable_path=__import__('os').environ.get('CMS_BROWSER'))
         try:
             for width, height in [(1440, 900), (390, 844)]:
                 for lang in ("en", "es", "ca", "fr"):

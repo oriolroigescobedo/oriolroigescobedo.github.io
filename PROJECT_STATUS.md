@@ -2,11 +2,29 @@
 
 Updated: 2026-11-14
 Repository: `oriolroigescobedo/oriolroigescobedo.github.io`
-Working branch: `feature/portfolio-cms-phase-1`
+Working branch: `feature/portfolio-cms-phase-3`
 Production branch: `main` — **DO NOT MODIFY**
 
 ## Objective
 Preserve the original public portfolio while gradually enabling on-page direct visual edits, dynamic navigation/sections, four locales and secure GitHub-based publication.
+
+## Phase 3 — implementation checkpoint (2026-11-14)
+- Started from verified Phase 2 head `fe1f007755716b6ebd0421ceabe40ceba6b9b8e6`. The latest Phase 2 run is **43539708807**, successful (newer than the supplied run 43539500137).
+- Added `cms/advanced.js`, integrating the existing editor with version-3 drafts and the evolved `cms/content.schema.json`. Original site JavaScript/CSS and all twenty image files remain unchanged.
+- Implemented component-based entry creation, deletion and ordering; custom sections; section deletion/ordering; automatic sidebar anchors, numbering, active-section observation and mobile navigation.
+- Added contextual rich-text, link destination and image/alt editors, local raster-image upload, and compatible-component link creation/removal. Existing interactive controls remain separate from editable content.
+- Added independent locale fields, missing-translation indicators, shared structural order, migration of v1 drafts, JSON import/export, save/reload and cancel-to-saved-draft.
+- Local Chrome: the existing Phase 2 regression passed all 16 viewport/locale/theme combinations. Exact baseline assertions passed (markup reversal, unchanged original CSS/JS, twenty image byte checks, 400 translation values).
+- Phase 3 integration and public screenshot parity are being run; CI results will be recorded below only after completion.
+
+### Phase 3 boundaries / remaining work
+- This is local draft editing only. The static public page ignores draft state. No OAuth, cloud image storage, remote publication or credentials are implemented.
+- Trusted components are adapted from preserved original markup; draft JSON stores template identities and field overrides, never arbitrary component HTML. A future publishing renderer must materialize these drafts server-side before release.
+- Existing education/experience/interest designs are reused; custom sections use the original section heading and experience-entry style. Home is retained as the required anchor. Moving entries between different section types and arbitrary layout editing are not included.
+- New content remains blank in other locales and is marked as missing; there is no generated translation. Original locale dictionaries are preserved, including their pre-existing fallback text.
+- Advanced panel labels currently use English. Full panel localization and a formal accessibility audit remain follow-up work.
+- Uploads accept raster images up to 2 MB. Browser storage quotas still apply; export JSON before changing devices. New blank image slots should be populated before publication.
+- Authentication/publication remains Phase 4; `main` and the public domain must not be modified without explicit approval.
 
 ## Baseline and inspection
 - `main` commit at baseline: `8a51574bd49bb8a28b5a2e8815cc48e491fd0f26`
