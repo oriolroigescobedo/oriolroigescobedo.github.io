@@ -1,0 +1,54 @@
+name: Portfolio CMS phase 1 migration
+
+on:
+  push:
+    branches:
+      - feature/portfolio-cms-phase-1
+    paths:
+      - .github/workflows/phase1-migration.yml
+      - tools/migrate_phase1.py
+      - tests/validate_phase1.py
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/feature/portfolio-cms-phase-1'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch with history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Extract original content, styling, scripts and images
+        run: |
+          set -euo pipefail
+          if grep -q 'assets/site.css' index.html; then
+            echo "Already migrated; running regression checks only."
+          else
+            python3 tools/migrate_phase1.py
+          fi
+
+      - name: Check exact content fidelity and JavaScript syntax
+        run: |
+          set -euo pipefail
+          python3 tests/validate_phase1.py
+          node --check assets/site.js
+          node --check cms/content/translations.js
+
+      - name: Commit only on the feature branch
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "feature/portfolio-cms-phase-1"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html assets cms/content cms/assets-manifest.json
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "Phase 1: separate portfolio CSS JS translations and images"
+            git push origin "HEAD:refs/heads/feature/portfolio-cms-phase-1"
+          fi
