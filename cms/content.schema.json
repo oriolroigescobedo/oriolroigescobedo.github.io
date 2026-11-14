@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portfolio CMS content model (proposed; not yet wired into index.html)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "defaultLocale",
+    "locales",
+    "sections"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "defaultLocale": {
+      "const": "en"
+    },
+    "locales": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "es",
+          "ca",
+          "fr"
+        ]
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/section"
+      }
+    }
+  },
+  "$defs": {
+    "localizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "es",
+        "ca",
+        "fr"
+      ],
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "es": {
+          "type": "string"
+        },
+        "ca": {
+          "type": "string"
+        },
+        "fr": {
+          "type": "string"
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "href"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "label": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "href": {
+          "type": "string"
+        },
+        "external": {
+          "type": "boolean"
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "body"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "title": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "subtitle": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "body": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          }
+        },
+        "image": {
+          "type": "string"
+        }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "visible",
+        "navLabel",
+        "heading",
+        "entries"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "kind": {
+          "enum": [
+            "hero",
+            "education",
+            "experience",
+            "projects",
+            "custom"
+          ]
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "navLabel": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "heading": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "intro": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        }
+      }
+    }
+  }
+}
