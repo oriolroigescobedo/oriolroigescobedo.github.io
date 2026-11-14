@@ -7,7 +7,7 @@
   var locales = ['en', 'es', 'ca', 'fr'];
   if (!dict || !locales.every(function (l) { return dict[l] && typeof dict[l] === 'object'; })) return;
 
-  var STORAGE_KEY = 'oriol-cms-draft-v1';
+  var STORAGE_KEY = 'oriol-cms-draft-v3';
   var original = JSON.parse(JSON.stringify(dict));
   var translationKeys = Object.keys(original.en);
   var keySet = new Set(translationKeys);
@@ -25,7 +25,7 @@
   };
 
   // Restrict stored/editable rich text so a local draft never injects executable markup.
-  function sanitize(value) {
+  function sanitize(value, allowYear) {
     var template = document.createElement('template');
     template.innerHTML = String(value);
     var allowed = new Set(['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'span', 'a', 'div']);
@@ -47,7 +47,7 @@
             return x === 'name-accent' || x === 'brand-word' || /^brand-(?:guspira|accenture|upc|upf)$/.test(x);
           });
           if (permitted.length) attributes.class = permitted.join(' ');
-          if (node.id === 'year') attributes.id = 'year';
+          if (node.id === 'year' && allowYear) attributes.id = 'year';
         }
         if (tag === 'a') {
           var href = node.getAttribute('href') || '';
@@ -102,18 +102,26 @@
     });
   }
   registerTargets();
+  var advanced = window.PortfolioCmsAdvanced({
+    locales: locales, sanitize: sanitize, language: language,
+    get: function () { return working; }, finish: finishActive,
+    change: function () { render(); updateUI(); },
+    importDraft: function (value) { finishActive(); working = normalize(value); render(); updateUI(); },
+    getDraft: function () { finishActive(); return copy(working); }
+  });
 
-  function emptyDraft() { return {version:1, translations:{en:{},es:{},ca:{},fr:{}}, static:{}}; }
+  function emptyDraft() { return {version:3, translations:{en:{},es:{},ca:{},fr:{}}, static:{}, staticLocales:{en:{},es:{},ca:{},fr:{}}, content: advanced.empty()}; }
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
   function normalize(value) {
     var out = emptyDraft();
-    if (!value || value.version !== 1 || typeof value !== 'object') return out;
+    if (!value || ![1,3].includes(value.version) || typeof value !== 'object') return out;
     locales.forEach(function (l) {
       var source = value.translations && value.translations[l];
       if (!source || typeof source !== 'object') return;
       Object.keys(source).forEach(function (id) {
         if (!keySet.has(id) || typeof source[id] !== 'string') return;
-        var val = sanitize(source[id]);
+        var val = sanitize(source[id], id === 'footerCopy');
+        if (id === 'footerCopy' && !val.includes('id="year"')) val += ' <span id="year"></span>';
         if (val !== original[l][id]) out.translations[l][id] = val;
       });
     });
@@ -124,9 +132,17 @@
         if (val !== initialStatic[key]) out.static[key] = val;
       });
     }
+    locales.forEach(function (l) {
+      var source = value.version === 1 ? out.static : (value.staticLocales || {})[l];
+      Object.keys(source || {}).forEach(function (k) {
+        if (Object.prototype.hasOwnProperty.call(initialStatic,k) && typeof source[k] === 'string') out.staticLocales[l][k] = sanitize(source[k]);
+      });
+    });
+    out.static = {};
+    out.content = advanced.normalize(value.content);
     return out;
   }
-  try { saved = normalize(JSON.parse(localStorage.getItem(STORAGE_KEY))); }
+  try { saved = normalize(JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem('oriol-cms-draft-v1'))); }
   catch (_) { saved = emptyDraft(); }
   working = copy(saved);
 
@@ -185,22 +201,12 @@
 
   function language() { return locales.includes(document.documentElement.lang) ? document.documentElement.lang : 'en'; }
   function dirtyCount() {
-    var count = 0;
-    locales.forEach(function (l) {
-      var names = new Set(Object.keys(working.translations[l]).concat(Object.keys(saved.translations[l])));
-      names.forEach(function (key) {
-        if ((Object.prototype.hasOwnProperty.call(working.translations[l],key) ? working.translations[l][key] : original[l][key]) !== (Object.prototype.hasOwnProperty.call(saved.translations[l],key) ? saved.translations[l][key] : original[l][key])) count++;
-      });
-    });
-    var staticNames = new Set(Object.keys(working.static).concat(Object.keys(saved.static)));
-    staticNames.forEach(function (key) {
-      if ((Object.prototype.hasOwnProperty.call(working.static,key) ? working.static[key] : initialStatic[key]) !== (Object.prototype.hasOwnProperty.call(saved.static,key) ? saved.static[key] : initialStatic[key])) count++;
-    });
-    return count;
+    return JSON.stringify(working) === JSON.stringify(saved) ? 0 : 1;
   }
   function isDirty() { return dirtyCount() > 0; }
   function updateUI(messageKey) {
     var t = messages[language()];
+    advanced.mode(editing);
     document.body.classList.toggle('cms-editing', editing);
     document.body.classList.toggle('cms-preview', !editing);
     title.textContent = t.title;
@@ -213,7 +219,10 @@
     status.textContent = messageKey ? t[messageKey] : (t.local + ' · ' + (isDirty() ? dirtyCount() + ' ' + t.dirty : (editing ? t.ready : t.view)));
   }
   function record(key, html) {
-    var value = sanitize(html);
+    var value = sanitize(html, key === 't:footerCopy');
+    if (key === 't:footerCopy' && !value.includes('id="year"')) value += ' <span id="year">' + new Date().getFullYear() + '</span>';
+    var ref = nodes.get(key)?.dataset.cmsRef;
+    if (ref && working.content.fields[ref]) working.content.fields[ref][language()] = value;
     if (key.slice(0,2) === 't:') {
       var id = key.slice(2);
       var locale = language();
@@ -221,8 +230,8 @@
       else working.translations[locale][id] = value;
       dict[locale][id] = value;
     } else if (key.slice(0,2) === 's:') {
-      if (value === initialStatic[key]) delete working.static[key];
-      else working.static[key] = value;
+      if (value === initialStatic[key]) delete working.staticLocales[language()][key];
+      else working.staticLocales[language()][key] = value;
     }
   }
   function finishActive() {
@@ -232,10 +241,11 @@
     record(el.dataset.cmsKey, el.innerHTML);
     el.removeAttribute('contenteditable');
     // Remove unsafe attributes introduced by rich-text paste, without losing structure.
-    el.innerHTML = sanitize(el.innerHTML);
+    el.innerHTML = el.dataset.cmsKey === 't:footerCopy' ? dict[language()].footerCopy : sanitize(el.innerHTML);
     updateUI();
   }
   function render() {
+    advanced.structure();
     locales.forEach(function (l) {
       translationKeys.forEach(function (key) {
         dict[l][key] = Object.prototype.hasOwnProperty.call(working.translations[l],key) ? working.translations[l][key] : original[l][key];
@@ -243,7 +253,7 @@
     });
     Object.keys(initialStatic).forEach(function (key) {
       var el = nodes.get(key);
-      if (el) el.innerHTML = Object.prototype.hasOwnProperty.call(working.static,key) ? working.static[key] : initialStatic[key];
+      if (el) el.innerHTML = Object.prototype.hasOwnProperty.call(working.staticLocales[language()],key) ? working.staticLocales[language()][key] : initialStatic[key];
     });
     var current = document.getElementById('lang' + language().charAt(0).toUpperCase() + language().slice(1));
     if (current) current.click(); // Invokes the existing translation, brand-highlight and reading-time logic.
@@ -252,6 +262,7 @@
   // Capture clicks to edit rather than accidentally follow existing links.
   document.addEventListener('click', function (event) {
     if (!editing || toolbar.contains(event.target)) return;
+    if (event.target.closest('[data-cms-ui], [data-cms-new]')) return;
     var el = event.target.closest('[data-cms-key]');
     if (!el || !nodes.has(el.dataset.cmsKey)) return;
     event.preventDefault();
@@ -280,14 +291,21 @@
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape' && active) {
       event.preventDefault();
+      var focused = active;
       finishActive();
-      active.blur();
+      focused.blur();
     }
   }, true);
   document.querySelectorAll('.lang-switch button').forEach(function (button) {
     button.addEventListener('click', function () { finishActive(); }, true);
-    button.addEventListener('click', function () { updateUI(); });
+    button.addEventListener('click', function () {
+      Object.keys(initialStatic).forEach(function (key) {
+        nodes.get(key).innerHTML = Object.prototype.hasOwnProperty.call(working.staticLocales[language()],key) ? working.staticLocales[language()][key] : initialStatic[key];
+      });
+      advanced.render(); updateUI();
+    });
   });
+  advanced.mount(actions);
   render();
   updateUI();
   window.PortfolioCmsEditor = Object.freeze({

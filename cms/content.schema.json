@@ -1,40 +1,68 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Portfolio CMS content model (proposed; not yet wired into index.html)",
+  "title": "Portfolio CMS version 3 local draft",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "version",
-    "defaultLocale",
-    "locales",
-    "sections"
+    "translations",
+    "static",
+    "staticLocales",
+    "content"
   ],
   "properties": {
     "version": {
-      "const": 1
+      "const": 3
     },
-    "defaultLocale": {
-      "const": "en"
+    "translations": {
+      "$ref": "#/$defs/dictionaries"
     },
-    "locales": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "enum": [
-          "en",
-          "es",
-          "ca",
-          "fr"
-        ]
+    "static": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    },
+    "staticLocales": {
+      "$ref": "#/$defs/dictionaries"
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/componentSection"
+          },
+          "maxItems": 60
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/localeOverrides"
+          }
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/attributes"
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/componentLink"
+          },
+          "maxItems": 300
+        }
       },
-      "minItems": 4,
-      "maxItems": 4
-    },
-    "sections": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/section"
-      }
+      "required": [
+        "sections",
+        "fields",
+        "attributes",
+        "links"
+      ]
     }
   },
   "$defs": {
@@ -163,6 +191,147 @@
           }
         }
       }
+    },
+    "localeOverrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "es": {
+          "type": "string"
+        },
+        "ca": {
+          "type": "string"
+        },
+        "fr": {
+          "type": "string"
+        }
+      },
+      "required": []
+    },
+    "dictionaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "es": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "ca": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "fr": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "en",
+        "es",
+        "ca",
+        "fr"
+      ]
+    },
+    "componentEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,90}$"
+        },
+        "template": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "template"
+      ]
+    },
+    "componentSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,90}$"
+        },
+        "template": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/componentEntry"
+          },
+          "maxItems": 150
+        }
+      },
+      "required": [
+        "id",
+        "template",
+        "entries"
+      ]
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "href": {
+          "type": "string"
+        },
+        "src": {
+          "type": "string"
+        },
+        "alt": {
+          "$ref": "#/$defs/localeOverrides"
+        },
+        "removed": {
+          "type": "boolean"
+        }
+      },
+      "required": []
+    },
+    "componentLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/localeOverrides"
+        }
+      },
+      "required": [
+        "id",
+        "owner",
+        "href",
+        "label"
+      ]
     }
-  }
+  },
+  "description": "Version 3 evolves the original section/entry design with trusted template references, locale field overrides, image/link attributes and phase-2 translations. Templates are defined by the preserved baseline markup, never supplied by imported JSON."
 }
