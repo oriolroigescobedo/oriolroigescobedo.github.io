@@ -37,6 +37,7 @@ try:
                         original = page.locator("#heroEyebrow").inner_html()
                         page.locator("#heroEyebrow").click()
                         page.locator("#heroEyebrow").fill("Phase 2 test text")
+                        print("EDIT DIAGNOSTIC", json.dumps(page.locator("#heroEyebrow").evaluate("(el) => ({text:el.innerText, html:el.innerHTML, editable:el.getAttribute(\'contenteditable\'), dirty:window.PortfolioCmsEditor.isDirty(), errors:[]})")), flush=True)
                         assert page.locator("#heroEyebrow").inner_text() == "Phase 2 test text"
                         assert page.evaluate("window.PortfolioCmsEditor.isDirty()")
                         page.locator(".cms-toggle").click()
