@@ -26,8 +26,8 @@ Preserve the original public portfolio while gradually enabling on-page direct v
 - [x] Added exact regression assertions: `tests/validate_phase1.py`.
 - [x] **Local migration completed**: extracted CSS, JS, four locales and 20 image files. Exact HTML reversal, translation equality and image hash checks passed locally; Node syntax checks passed.
 - [x] Added GitHub Actions `.github/workflows/phase1-migration.yml` to perform the same extraction in the feature branch and commit ONLY there; triggered by push.
-- [ ] Check the result of the Actions run **43537558789**, which was queued at the last inspection: https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43537558789
-- [ ] Verify migration-generated files actually exist on the branch. Do not mark until the Actions job commits them.
+- [x] GitHub Actions run **43537558789** completed successfully, including static parity and Node syntax checks: https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43537558789
+- [x] Verified migration-generated files exist on the feature branch (20 binary assets, separate CSS/JS, four locales, image manifest, migrated index).
 - [ ] Screenshot comparison and interactive browser QA on desktop/mobile, 4 languages, 2 themes, all accent colors. Chromium screenshot testing locally was blocked by environment administrator restrictions; **browser parity remains unverified**.
 - [ ] Finish the static/live parity check before claiming Phase 1 fully complete.
 
@@ -51,7 +51,7 @@ The dynamic sections schema is NOT yet active. This is architecture migration on
 
 ## Next conversation
 1. Open this `PROJECT_STATUS.md`, `cms/README.md`, workflow status, and feature branch file inventory.
-2. If the CI job has not finished, diagnose or rerun migration.
+2. CI migration succeeded (run 43537558789); avoid rerunning migration unnecessarily.
 3. Perform real browser parity testing for original versus feature branch.
 4. Record verified results and final Phase 1 status.
 5. Only after Phase 1 is verified, begin Phase 2 click-to-edit development on another branch or this feature branch. `main` stays unchanged.
