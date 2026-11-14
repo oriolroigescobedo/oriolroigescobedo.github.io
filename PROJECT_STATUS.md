@@ -28,8 +28,9 @@ Preserve the original public portfolio while gradually enabling on-page direct v
 - [x] Added GitHub Actions `.github/workflows/phase1-migration.yml` to perform the same extraction in the feature branch and commit ONLY there; triggered by push.
 - [x] GitHub Actions run **43537558789** completed successfully, including static parity and Node syntax checks: https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43537558789
 - [x] Verified migration-generated files exist on the feature branch (20 binary assets, separate CSS/JS, four locales, image manifest, migrated index).
-- [ ] GitHub Actions real-browser parity check added: `tests/browser_parity.py`, 16 combinations (desktop/mobile × 4 locales × light/dark). Run **43537774230** in progress at last inspection: https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43537774230. Local Chromium testing was blocked. Still verify all 4 accent colors and complex interactive controls.
-- [ ] Finish browser test, fix any failures on this feature branch, and document its final outcome before claiming Phase 1 fully complete.
+- [x] GitHub Actions browser parity **43537774230 completed successfully**: 16/16 comparisons passed (desktop/mobile × 4 locales × light/dark), all DOM comparisons equal, 0.000000 pixel difference, no JS page errors. https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43537774230
+- [ ] Additional manual interaction QA on all four accent-color buttons, auto-scroll and sidebar controls is recommended before merging; the original JavaScript and stylesheet are structurally preserved.
+- [x] Phase 1 migration and automated browser parity completed. No change to `main`. Further manual acceptance is recommended before future merge.
 
 ## Implementation notes
 The workflow converts `index.html` into a clean split:
@@ -52,9 +53,9 @@ The dynamic sections schema is NOT yet active. This is architecture migration on
 ## Next conversation
 1. Open this `PROJECT_STATUS.md`, `cms/README.md`, workflow status, and feature branch file inventory.
 2. CI migration succeeded (run 43537558789); avoid rerunning migration unnecessarily.
-3. Perform real browser parity testing for original versus feature branch.
-4. Record verified results and final Phase 1 status.
-5. Only after Phase 1 is verified, begin Phase 2 click-to-edit development on another branch or this feature branch. `main` stays unchanged.
+3. Automated browser parity passed in CI (run 43537774230, 16/16 identical screenshots). Additional manual interaction QA may be done before merging.
+4. Phase 1 structural migration complete; keep the public site unchanged.
+5. Begin Phase 2 click-to-edit development on a separate feature branch. `main` stays unchanged.
 
 ## Further roadmap
 - Phase 2: on-page editing without changing public design
