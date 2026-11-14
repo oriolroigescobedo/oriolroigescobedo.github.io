@@ -62,3 +62,18 @@ The dynamic sections schema is NOT yet active. This is architecture migration on
 - Phase 3: add/remove/reorder sections, experiences, education, projects, links, images, multi-language content and generated navigation
 - Phase 4: authenticated GitHub publishing without exposed secrets
 - Phase 5: end-to-end QA and approved release
+
+## Phase 2 — implementation checkpoint (2026-11-14)
+- Development branch: `feature/portfolio-cms-phase-2` created from Phase 1 head `27a85907ae4cb2faaf2c6598338bd73e779a3e5b`.
+- [x] Added passive `cms/editor.css` and opt-in `cms/editor.js` (`?cms=edit` only).
+- [x] Added click-to-edit translation text, additional simple static targets, floating Preview/Edit, Save Draft, Cancel Changes and Exit controls.
+- [x] Added per-language EN/ES/CA/FR override state, local-only browser draft persistence, and HTML sanitization.
+- [x] Existing `assets/site.js`, the 20 image assets and `cms/content/translations.json` left unchanged.
+- [x] Added `tests/editor_phase2.py` and branch-specific `.github/workflows/phase2-editor.yml`; adapted exact original-HTML assertion to ignore only the two added Phase 2 resource tags.
+- [x] Updated `cms/README.md` with usage, limits and security boundary.
+- [ ] CI browser tests must succeed before declaring Phase 2 complete; inspect the most recent `Portfolio CMS phase 2 browser checks` workflow run.
+- [ ] Manual browser acceptance still needed for all fixed controls, focus/selection, existing links and complex rich formatting (automated browser tests cover the primary flows).
+
+**Important**: `?cms=edit` is an open URL switch, NOT access control. All drafts are local to the device and are never sent to GitHub. Authentication, private mode and publishing are deferred to Phase 4; do not put credentials in this static site. The initial milestone does not include editing image assets, URLs or adding/reordering sections, which remain Phase 3.
+
+**Next checkpoint**: review Phase 2 CI, resolve any failures on `feature/portfolio-cms-phase-2`, record verified run ID, and ensure `main` remains at `8a51574bd49bb8a28b5a2e8815cc48e491fd0f26` before considering any release.
