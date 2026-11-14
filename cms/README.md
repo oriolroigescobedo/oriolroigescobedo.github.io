@@ -43,3 +43,19 @@ Static GitHub Pages cannot protect an in-browser hard-coded password. Never comm
 3. Run original-vs-refactored visual snapshots in a working browser environment (desktop/mobile, 4 locales, light/dark).
 4. Compare all links and interactions. Address regressions on the feature branch only.
 5. Continue to Phase 2 (visual editor) without merging `main` until approved.
+
+## Phase 2 — Visual editing (development only)
+
+The editor is loaded through `cms/editor.js` and `cms/editor.css` and **only activates** at `index.html?cms=edit` (the public page remains visually unchanged when this parameter is absent). This URL option is **not authentication**; it must not be treated as a private/admin lock. GitHub-based authentication and remote publication remain Phase 4.
+
+Features in this phase:
+- On-page click-to-edit for the 100 existing translation keys, retaining the original HTML structure, and additional eligible static text targets.
+- Floating toolbar with Edit/Preview, Save Draft, Cancel Changes and Exit.
+- 4-locale draft overrides. Editing one language leaves other languages untouched.
+- Local `localStorage` save as `oriol-cms-draft-v1`, with drafts rehydrated on edit-mode reload; nothing is committed or published from the website.
+- HTML sanitization for saved rich text: only basic paragraph, line break, emphasis, span and safe link markup are retained; no scripts or event-handler attributes.
+- Responsive controls, keyboard focus styles, dark theme compatibility, and passive CSS unless editor mode is active.
+
+**Limitations / next phases**: Saved drafts are device/browser-local, not authenticated or synchronized with GitHub. Static labels with complex nested SVG/image controls, URL editing, images, adding/removing/reordering sections, and dynamic navigation are intentionally outside this milestone; to be addressed in Phases 3–4. Editing markup can change formatting on edited targets; no guarantee of pixel-identical screenshots while edit mode is active. No public editing mode should be enabled as an access-controlled feature without server-side GitHub OAuth.
+
+CI: `.github/workflows/phase2-editor.yml` runs exact baseline migration assertions, original-vs-current browser parity on the default URL, and multilingual interactive editor smoke tests. Details and pending acceptance are recorded in `PROJECT_STATUS.md`.
