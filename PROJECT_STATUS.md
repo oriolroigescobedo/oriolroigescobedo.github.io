@@ -15,7 +15,11 @@ Preserve the original public portfolio while gradually enabling on-page direct v
 - Added contextual rich-text, link destination and image/alt editors, local raster-image upload, and compatible-component link creation/removal. Existing interactive controls remain separate from editable content.
 - Added independent locale fields, missing-translation indicators, shared structural order, migration of v1 drafts, JSON import/export, save/reload and cancel-to-saved-draft.
 - Local Chrome: the existing Phase 2 regression passed all 16 viewport/locale/theme combinations. Exact baseline assertions passed (markup reversal, unchanged original CSS/JS, twenty image byte checks, 400 translation values).
-- Phase 3 integration and public screenshot parity are being run; CI results will be recorded below only after completion.
+- **GitHub Actions run [43542459946](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43542459946) succeeded** against code commit `bed078238d1ccff6731d840773b31fb05f66b8aa`.
+- CI passed real Chromium integration tests at 1440px and 390px: link/image edits, four-locale new entries, ordering, sidebar numbering, stable IDs, draft reload/cancel, theme/accent controls, auto-scroll, mobile navigation, JSON round-trip, rich formatting, link creation/deletion, raster upload, malformed/unsafe import rejection, section deletion/restoration and v1 migration. No JavaScript page errors were observed in these checks.
+- CI passed the existing 16-case Phase 2 interaction matrix and **16/16 strict public-page screenshot comparisons with zero differing pixels**. The prior 1% visual tolerance was removed; the test now requires zero and waits for fonts/transitions to settle. Local Chrome also passed all 16 zero-difference comparisons; its measurements are saved in `tests/browser-parity-results.json`.
+- Implementation commits: `46e93738c3335624b30df94ea1b721c2afdefb4e` (model/editor) and `bed078238d1ccff6731d840773b31fb05f66b8aa` (tests/documentation). The final documentation-only checkpoint does not change the tested application code.
+- Rechecked the production head after implementation: `main` remains `8a51574bd49bb8a28b5a2e8815cc48e491fd0f26`. No merge or public deployment was performed.
 
 ### Phase 3 boundaries / remaining work
 - This is local draft editing only. The static public page ignores draft state. No OAuth, cloud image storage, remote publication or credentials are implemented.
