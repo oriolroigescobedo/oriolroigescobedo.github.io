@@ -8,6 +8,7 @@ on:
       - .github/workflows/phase1-migration.yml
       - tools/migrate_phase1.py
       - tests/validate_phase1.py
+      - tests/browser_parity.py
 
 permissions:
   contents: write
@@ -38,6 +39,15 @@ jobs:
           python3 tests/validate_phase1.py
           node --check assets/site.js
           node --check cms/content/translations.js
+
+      - name: Install browser parity dependencies
+        run: |
+          python3 -m pip install --break-system-packages playwright pillow numpy
+          python3 -m playwright install --with-deps chromium
+
+      - name: Run original-versus-migrated browser comparison
+        run: |
+          python3 tests/browser_parity.py
 
       - name: Commit only on the feature branch
         run: |
