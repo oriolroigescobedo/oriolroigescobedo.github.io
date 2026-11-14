@@ -28,8 +28,8 @@ Preserve the original public portfolio while gradually enabling on-page direct v
 - [x] Added GitHub Actions `.github/workflows/phase1-migration.yml` to perform the same extraction in the feature branch and commit ONLY there; triggered by push.
 - [x] GitHub Actions run **43537558789** completed successfully, including static parity and Node syntax checks: https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43537558789
 - [x] Verified migration-generated files exist on the feature branch (20 binary assets, separate CSS/JS, four locales, image manifest, migrated index).
-- [ ] Screenshot comparison and interactive browser QA on desktop/mobile, 4 languages, 2 themes, all accent colors. Chromium screenshot testing locally was blocked by environment administrator restrictions; **browser parity remains unverified**.
-- [ ] Finish the static/live parity check before claiming Phase 1 fully complete.
+- [ ] GitHub Actions real-browser parity check added: `tests/browser_parity.py`, 16 combinations (desktop/mobile × 4 locales × light/dark). Run **43537774230** in progress at last inspection: https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43537774230. Local Chromium testing was blocked. Still verify all 4 accent colors and complex interactive controls.
+- [ ] Finish browser test, fix any failures on this feature branch, and document its final outcome before claiming Phase 1 fully complete.
 
 ## Implementation notes
 The workflow converts `index.html` into a clean split:
