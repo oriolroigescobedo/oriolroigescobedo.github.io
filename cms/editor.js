@@ -189,12 +189,12 @@
     locales.forEach(function (l) {
       var names = new Set(Object.keys(working.translations[l]).concat(Object.keys(saved.translations[l])));
       names.forEach(function (key) {
-        if ((working.translations[l][key] || original[l][key]) !== (saved.translations[l][key] || original[l][key])) count++;
+        if ((Object.prototype.hasOwnProperty.call(working.translations[l],key) ? working.translations[l][key] : original[l][key]) !== (Object.prototype.hasOwnProperty.call(saved.translations[l],key) ? saved.translations[l][key] : original[l][key])) count++;
       });
     });
     var staticNames = new Set(Object.keys(working.static).concat(Object.keys(saved.static)));
     staticNames.forEach(function (key) {
-      if ((working.static[key] || initialStatic[key]) !== (saved.static[key] || initialStatic[key])) count++;
+      if ((Object.prototype.hasOwnProperty.call(working.static,key) ? working.static[key] : initialStatic[key]) !== (Object.prototype.hasOwnProperty.call(saved.static,key) ? saved.static[key] : initialStatic[key])) count++;
     });
     return count;
   }
@@ -285,6 +285,7 @@
     }
   }, true);
   document.querySelectorAll('.lang-switch button').forEach(function (button) {
+    button.addEventListener('click', function () { finishActive(); }, true);
     button.addEventListener('click', function () { updateUI(); });
   });
   render();
