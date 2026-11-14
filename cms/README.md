@@ -31,8 +31,8 @@ This phase separates translations but **does not** pretend every text is editabl
 ## Checks and limitations
 - Local validation passed: CSS and script preservation, exact HTML reversible transformation, all 20 image bytes, all 400 translations equal to the original.
 - Node.js syntax check passed.
-- Chromium screenshot-based parity could not execute in the current container due to a browser administrator block. The complete visual parity test remains **pending**, not passed.
-- Use the GitHub Actions run results to check whether server-side migration and static checks completed; it may be queued. Only call Phase 1 validated once the workflow succeeds and a functioning preview has been checked.
+- Chromium was blocked in the initial container, so the checks were moved to GitHub Actions. **Run 43537774230 passed:** 16/16 original-vs-migrated screenshot comparisons had 0.000000 pixel difference, matching text/DOM/computed styles, and no JavaScript page errors. Desktop/mobile (1440px/390px), all 4 locales and both themes tested.
+- GitHub Actions verified the migration and full-page browser rendering. Additional manual exploration of accent selection, sidebar menu, automatic scrolling and other controls before production merge is still recommended.
 
 ## Security
 Static GitHub Pages cannot protect an in-browser hard-coded password. Never commit PATs, passwords, secrets or client tokens. Admin publication must require GitHub authorization (prefer an OAuth intermediary; an explicitly entered, session-only fine-grained token may be an interim prototype).
