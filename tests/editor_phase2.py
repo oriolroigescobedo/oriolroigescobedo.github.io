@@ -37,12 +37,11 @@ try:
                         original = page.locator("#heroEyebrow").inner_html()
                         page.locator("#heroEyebrow").click()
                         page.locator("#heroEyebrow").fill("Phase 2 test text")
-                        print("EDIT DIAGNOSTIC", json.dumps(page.locator("#heroEyebrow").evaluate("(el) => ({text:el.innerText, html:el.innerHTML, editable:el.getAttribute(\'contenteditable\'), dirty:window.PortfolioCmsEditor.isDirty(), errors:[]})")), flush=True)
-                        assert page.locator("#heroEyebrow").inner_text() == "Phase 2 test text"
+                        assert page.locator("#heroEyebrow").text_content() == "Phase 2 test text"
                         assert page.evaluate("window.PortfolioCmsEditor.isDirty()")
                         page.locator(".cms-toggle").click()
                         assert page.locator("body.cms-preview").count() == 1
-                        assert page.locator("#heroEyebrow").inner_text() == "Phase 2 test text"
+                        assert page.locator("#heroEyebrow").text_content() == "Phase 2 test text"
                         page.locator(".cms-cancel").click()
                         assert page.locator("#heroEyebrow").inner_html() == original
                         assert not page.evaluate("window.PortfolioCmsEditor.isDirty()")
@@ -52,7 +51,7 @@ try:
                         page.locator(".cms-save").click()
                         assert not page.evaluate("window.PortfolioCmsEditor.isDirty()")
                         page.reload(wait_until="networkidle")
-                        assert page.locator("#heroEyebrow").inner_text() == "Stored draft"
+                        assert page.locator("#heroEyebrow").text_content() == "Stored draft"
                         assert not errors, f"Page errors {lang}/{theme}/{width}: {errors}"
                         page.close()
                         print(f"PASS {width}px / {lang} / {theme}: editing, preview, cancel, draft persist, controls", flush=True)
@@ -63,12 +62,12 @@ try:
             page.locator("#heroEyebrow").fill("EN only")
             page.locator(".cms-save").click()
             page.locator("#langEs").click()
-            assert page.locator("#heroEyebrow").inner_text() != "EN only"
+            assert page.locator("#heroEyebrow").text_content() != "EN only"
             page.locator("#heroEyebrow").click()
             page.locator("#heroEyebrow").fill("ES only")
             page.locator(".cms-save").click()
             page.locator("#langEn").click()
-            assert page.locator("#heroEyebrow").inner_text() == "EN only"
+            assert page.locator("#heroEyebrow").text_content() == "EN only"
             draft = page.evaluate("window.PortfolioCmsEditor.getSavedDraft()")
             assert draft["translations"]["en"]["heroEyebrow"] == "EN only"
             assert draft["translations"]["es"]["heroEyebrow"] == "ES only"
