@@ -18,13 +18,13 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 from publisher.validation import InvalidDraft, MAX_BYTES, ROOT, validate
 
 REPO = 'oriolroigescobedo/oriolroigescobedo.github.io'
-BRANCH = 'feature/portfolio-cms-phase-4'
+BRANCH = 'feature/portfolio-cms-phase-5'
 REF = f'refs/heads/{BRANCH}'
 PATH = 'cms/content/published.v3.json'
 SESSION_AGE = 1800
 LOGIN_AGE = 300
 REVIEW_AGE = 600
-ASSETS = {'/index.html', '/assets/site.css', '/assets/site.js', '/cms/editor.css',
+ASSETS = {'/index.html', '/assets/site.css', '/assets/site.js', '/cms/editor.css', f'/{PATH}',
           '/cms/editor.js', '/cms/advanced.js', '/cms/publish.js', '/cms/content/translations.js'}
 SHA = re.compile(r'[a-f0-9]{40}')
 HEAD_QUERY = """

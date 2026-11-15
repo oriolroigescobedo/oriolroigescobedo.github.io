@@ -1,21 +1,27 @@
 /* Trusted component templates and locale-aware draft data. */
+function portfolioCmsSafeURL(value, image) {
+  if (typeof value !== 'string' || !value || /\s|[\u0000-\u001f\u007f\\]/.test(value)) return false;
+  if (image && /^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/]+={0,2}$/i.test(value)) return value.length < 2800000;
+  if (value.length > 4096) return false;
+  if (/^https?:\/\//i.test(value)) {
+    try { const url = new URL(value); return !!url.hostname && !url.username && !url.password; }
+    catch (_) { return false; }
+  }
+  return /^(?:\.\/|\.\.\/|\/(?!\/)|assets\/)/i.test(value) || (!image && /^(?:mailto:.+|tel:.+|#.*)$/i.test(value));
+}
+
 window.PortfolioCmsAdvanced = function (bridge) {
   'use strict';
   const locales = bridge.locales, clone = x => JSON.parse(JSON.stringify(x));
   const sectionNodes = new Map(), entryNodes = new Map(), targets = new Map();
-  const templates = {}, base = {sections: [], fields: {}, attributes: {}, links: []};
+  const templates = Object.create(null), base = {sections: [], fields: {}, attributes: {}, links: []};
   const entrySelector = '.timeline-item,.experience-item,.feature-card,.interest';
   let selected = null, editing = true, panel, selectionLabel, form, tree, missing;
   const uid = () => 'cms-' + crypto.randomUUID();
   const locale = () => bridge.language();
   const model = () => bridge.get().content;
   const localized = text => Object.fromEntries(locales.map(l => [l, l === locale() ? text : '']));
-  const safeURL = (value, image) => {
-    const v = String(value).trim();
-    if (/\s|[\u0000-\u001f\\]/.test(v)) return false;
-    if (image && /^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=]+$/i.test(v)) return v.length < 2800000;
-    return /^(https?:\/\/|\.?\.?\/(?!\/)|assets\/)/i.test(v) || (!image && /^(mailto:|tel:|#[a-z][\w-]*$)/i.test(v));
-  };
+  const safeURL = portfolioCmsSafeURL;
   function register(root, prefix, fresh) {
     const list = [root, ...root.querySelectorAll('*')];
     list.forEach((el, i) => {
@@ -62,6 +68,7 @@ window.PortfolioCmsAdvanced = function (bridge) {
       const old = base.sections.find(x => x.id === s.id);
       if (!old && (!s.id.startsWith('cms-') || s.template !== 'custom')) throw new Error('Unknown section');
       if (!Array.isArray(s.entries) || s.entries.length > 150) throw new Error('Invalid entries');
+      if (old && (s.template !== old.template || !containers.has(old.id) && s.entries.length)) throw new Error('Invalid section template');
       return {id:s.id, template:old ? old.template : 'custom', entries:s.entries.map(e => {
         claim(e.id);
         if (!templates[e.template]) throw new Error('Unknown component');
@@ -74,12 +81,13 @@ window.PortfolioCmsAdvanced = function (bridge) {
     if (!out.sections.some(s=>s.id==='home')) throw new Error('Home is required');
     out.fields = {};
     Object.entries(input.fields || {}).forEach(([key, values]) => {
-      if (key.length > 200 || !values || typeof values !== 'object') throw new Error('Invalid field');
+      if (!/^[a-z][a-z0-9_-]*:[a-zA-Z0-9_.-]*$/.test(key) || key.length > 200 || !values || typeof values !== 'object') throw new Error('Invalid field');
       out.fields[key] = {};
       locales.forEach(l => { if (typeof values[l] === 'string' && values[l].length < 100000) out.fields[key][l] = bridge.sanitize(values[l]); });
     });
     out.attributes = {};
     Object.entries(input.attributes || {}).forEach(([key, attrs]) => {
+      if (!/^[a-z][a-z0-9_-]*:[a-zA-Z0-9_.-]*$/.test(key) || key.length > 200) throw new Error('Invalid field');
       const a = {};
       if (attrs.href !== undefined) { if (!safeURL(attrs.href,false)) throw new Error('Unsafe link'); a.href = attrs.href; }
       if (attrs.src !== undefined) { if (!safeURL(attrs.src,true)) throw new Error('Unsafe image'); a.src = attrs.src; }
@@ -133,12 +141,12 @@ window.PortfolioCmsAdvanced = function (bridge) {
     const m=model();
     targets.forEach((target,key) => {
       let {el,href,src,alt}=target;
-      if(!el.isConnected && target.anchor){
+      if(!el.isConnected && target.anchor && !el.closest('[data-cms-entry]')){
         let live=document.getElementById(target.anchor);target.path.forEach(i=>live=live?.children[i]);
         if(live && live.tagName===el.tagName){el=live;target.el=live;live.dataset.cmsRef=key;}
       }
       const values=m.fields[key];
-      const canText=el.matches('[data-cms-key],h2,h3,p,strong,.entry-meta,.entry-org,.category-pill,a,span') && !el.querySelector('img,svg,button');
+      const canText=el.matches('[data-cms-key],h2,h3,p,strong,.entry-meta,.entry-org,.category-pill,a,span') && !el.querySelector('img,svg,button,.num,[data-cms-key]');
       if (values && canText && Object.hasOwn(values,locale())) {el.innerHTML=bridge.sanitize(values[locale()]);target.painted=true;}
       else if(target.painted && !el.hasAttribute('data-cms-key') && !el.closest('[data-cms-new]')) {el.innerHTML=target.html;target.painted=false;}
       else if(el.closest('[data-cms-new]') && el.matches('h2,h3,p,strong,.entry-meta,.entry-org,.category-pill')) el.innerHTML='';
@@ -154,7 +162,7 @@ window.PortfolioCmsAdvanced = function (bridge) {
     document.querySelectorAll('[data-cms-added-link]').forEach(el=>el.remove());
     m.links.forEach(link=>{
       const owner=targets.get(link.owner)?.el;
-      if(!owner?.isConnected) return;
+      if(!owner?.isConnected || !owner.matches('.entry-org,.contact-links,.hero-contacts,.quick-links')) return;
       const a=document.createElement('a'); a.dataset.cmsAddedLink=link.id; a.href=link.href; a.textContent=link.label[locale()] || '…';
       owner.append(a);
     });
@@ -178,7 +186,11 @@ window.PortfolioCmsAdvanced = function (bridge) {
       nav.replaceChildren(...base.sections.map(s=>originalNav.get(s.id)));
       base.sections.forEach((s,i)=>{ originalNav.get(s.id).querySelector('.num').textContent=String(i).padStart(2,'0'); const n=sectionNodes.get(s.id).querySelector('.section-index'); if(n)n.textContent=String(i).padStart(2,'0'); });
     }
-    document.querySelectorAll('.top-nav a,.quick-links a,.sidebar a[href="#contact"]').forEach(a=>{ a.hidden = !m.sections.some(s=>'#'+s.id===a.getAttribute('href')); });
+    const existing = new Set(m.sections.map(s => s.id));
+    document.querySelectorAll('.top-nav a,.quick-links a,.sidebar a[href^="#"]').forEach(a=>{
+      const anchor = a.getAttribute('href');
+      if (anchor?.startsWith('#') && base.sections.some(s => '#'+s.id === anchor) && !existing.has(anchor.slice(1))) a.hidden = true;
+    });
     if(observer) observer.disconnect();
     observer=new IntersectionObserver(entries=>{
       entries.forEach(e=>{ if(!e.isIntersecting) return; nav.querySelectorAll('a').forEach(a=>{ const on=a.hash==='#'+e.target.id; a.classList.toggle('active',on); if(on)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current'); }); });
@@ -297,10 +309,11 @@ window.PortfolioCmsAdvanced = function (bridge) {
       if(el.matches('img') || el.closest('[data-cms-new]')){event.preventDefault();event.stopImmediatePropagation();}
       select(el);
     },true);
-    document.querySelector('.sidebar-nav').addEventListener('click',event=>{
-      if(!event.target.closest('a'))return;
-      if(matchMedia('(max-width: 980px)').matches){document.body.classList.remove('sidebar-open');document.getElementById('menuButton').setAttribute('aria-expanded','false');}
-    });
   }
+  document.querySelector('.sidebar-nav').addEventListener('click',event=>{
+    if(!event.target.closest('a'))return;
+    if(matchMedia('(max-width: 980px)').matches){document.body.classList.remove('sidebar-open');document.getElementById('menuButton').setAttribute('aria-expanded','false');}
+  });
   return {empty:()=>clone(base),normalize,structure,render,mount,mode(value){editing=value;if(!value && panel){panel.hidden=true;document.querySelectorAll('.cms-selected').forEach(el=>el.classList.remove('cms-selected'));}}};
 };
+window.PortfolioCmsAdvanced.safeURL = portfolioCmsSafeURL;

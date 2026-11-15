@@ -1,7 +1,18 @@
 /* Portfolio CMS — on-page draft editor. The URL opt-in only enables the UI. */
-(function () {
+(async function () {
   'use strict';
-  if (new URLSearchParams(window.location.search).get('cms') !== 'edit') return;
+  const editMode = new URLSearchParams(window.location.search).get('cms') === 'edit';
+  let published = null;
+  try {
+    const response = await fetch(new URL('./cms/content/published.v3.json', location.href), {
+      cache: 'no-cache', signal: AbortSignal.timeout(5000),
+    });
+    if (response.ok && response.headers.get('Content-Type')?.includes('application/json')) {
+      const bytes = await response.blob();
+      if (bytes.size <= 12_000_000) published = JSON.parse(await bytes.text());
+    }
+  } catch (_) { /* The portfolio already displays its built-in content. */ }
+  if (!editMode && !published) return;
   var dict = window.PortfolioTranslations;
   var locales = ['en', 'es', 'ca', 'fr'];
   if (!dict || !locales.every(function (l) { return dict[l] && typeof dict[l] === 'object'; })) return;
@@ -50,7 +61,7 @@
         }
         if (tag === 'a') {
           var href = node.getAttribute('href') || '';
-          if (/^(https?:\/\/|mailto:|#|\/(?!\/))/i.test(href)) {
+          if (window.PortfolioCmsAdvanced.safeURL(href, false)) {
             attributes.href = href;
             if (node.getAttribute('target') === '_blank') {
               attributes.target = '_blank';
@@ -141,8 +152,34 @@
     out.content = advanced.normalize(value.content);
     return out;
   }
-  try { saved = normalize(JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem('oriol-cms-draft-v1'))); }
-  catch (_) { saved = emptyDraft(); }
+  function publishedDraft(value) {
+    const object = item => item !== null && typeof item === 'object' && !Array.isArray(item);
+    const texts = item => object(item) && Object.values(item).every(text => typeof text === 'string' && text.length < 100000);
+    const dictionaries = item => object(item) && locales.every(l => texts(item[l]));
+    if (value?.version !== 3 || !dictionaries(value.translations) || !dictionaries(value.staticLocales)
+        || !object(value.static) || Object.keys(value.static).length || !object(value.content)) return null;
+    const {sections, fields, attributes, links} = value.content;
+    if (!Array.isArray(sections) || !Array.isArray(links) || !object(fields) || !object(attributes)
+        || !Object.values(fields).every(texts) || !Object.values(attributes).every(object)) return null;
+    try { return normalize(value); }
+    catch (_) { return null; }
+  }
+  const committed = publishedDraft(published);
+  if (!editMode) {
+    if (!committed) return;
+    working = committed;
+    advanced.mode(false);
+    bindLocales(false);
+    render();
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    return;
+  }
+
+  saved = committed || emptyDraft();
+  try {
+    const local = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('oriol-cms-draft-v1');
+    if (local) saved = normalize(JSON.parse(local));
+  } catch (_) { /* Keep the published baseline if a local draft cannot be read. */ }
   working = copy(saved);
 
   var toolbar = document.createElement('section');
@@ -295,15 +332,19 @@
       focused.blur();
     }
   }, true);
-  document.querySelectorAll('.lang-switch button').forEach(function (button) {
-    button.addEventListener('click', function () { finishActive(); }, true);
-    button.addEventListener('click', function () {
-      Object.keys(initialStatic).forEach(function (key) {
-        nodes.get(key).innerHTML = Object.prototype.hasOwnProperty.call(working.staticLocales[language()],key) ? working.staticLocales[language()][key] : initialStatic[key];
+  function bindLocales(withEditor) {
+    document.querySelectorAll('.lang-switch button').forEach(function (button) {
+      if (withEditor) button.addEventListener('click', finishActive, true);
+      button.addEventListener('click', function () {
+        Object.keys(initialStatic).forEach(function (key) {
+          nodes.get(key).innerHTML = Object.hasOwn(working.staticLocales[language()],key) ? working.staticLocales[language()][key] : initialStatic[key];
+        });
+        advanced.render();
+        if (withEditor) updateUI();
       });
-      advanced.render(); updateUI();
     });
-  });
+  }
+  bindLocales(true);
   advanced.mount(actions);
   window.PortfolioCmsPublish?.(actions, function () {
     finishActive();
