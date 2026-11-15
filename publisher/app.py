@@ -25,7 +25,7 @@ SESSION_AGE = 1800
 LOGIN_AGE = 300
 REVIEW_AGE = 600
 ASSETS = {'/index.html', '/assets/site.css', '/assets/site.js', '/cms/editor.css', f'/{PATH}',
-          '/cms/editor.js', '/cms/advanced.js', '/cms/publish.js', '/cms/content/translations.js'}
+          '/cms/editor.js', '/cms/interface.js', '/cms/advanced.js', '/cms/publish.js', '/cms/content/translations.js'}
 SHA = re.compile(r'[a-f0-9]{40}')
 HEAD_QUERY = """
 query PortfolioDraft($owner: String!, $name: String!, $ref: String!) {

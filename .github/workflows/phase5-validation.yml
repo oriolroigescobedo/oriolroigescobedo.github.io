@@ -1,0 +1,43 @@
+name: Portfolio CMS phase 5 validation
+on:
+  push:
+    branches: [feature/portfolio-cms-phase-5]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/feature/portfolio-cms-phase-5'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax and exact baseline preservation
+        run: |
+          node --check cms/editor.js
+          node --check cms/interface.js
+          node --check cms/advanced.js
+          node --check cms/publish.js
+          python tests/validate_phase1.py
+      - name: Install validation and browser dependencies
+        run: |
+          python -m pip install -r publisher/requirements.txt playwright pillow numpy
+          python -m playwright install --with-deps chromium
+      - name: Publisher authentication and safety checks
+        run: python -m unittest discover -s tests -p test_publisher.py -v
+      - name: Publisher browser integration
+        run: python tests/browser_publisher.py
+      - name: Phase 3 editor integration
+        run: python tests/editor_phase3.py
+      - name: Phase 2 multilingual editor regression
+        run: python tests/editor_phase2.py
+      - name: Public portfolio visual parity
+        run: python tests/browser_parity.py
+      - name: Published portfolio browser integration
+        run: python -m tests.browser_published

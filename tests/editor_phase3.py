@@ -14,7 +14,7 @@ server=ThreadingHTTPServer(('127.0.0.1',8963),partial(Quiet,directory=str(ROOT))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 URL='http://127.0.0.1:8963/index.html?cms=edit'
 def close_panel(page):
-    if page.locator('#cmsInspector').is_visible(): page.get_by_role('button',name='Close',exact=True).click()
+    if page.locator('#cmsInspector').is_visible(): page.locator('.cms-inspector-close').click()
 def select(page,selector):
     close_panel(page)
     page.locator(selector).click()

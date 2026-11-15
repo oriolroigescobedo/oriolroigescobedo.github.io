@@ -19,6 +19,8 @@ window.PortfolioCmsAdvanced = function (bridge) {
   let selected = null, editing = true, panel, selectionLabel, form, tree, missing;
   const uid = () => 'cms-' + crypto.randomUUID();
   const locale = () => bridge.language();
+  const t = (label) => portfolioCmsText(label);
+  const localizedControls = new Map();
   const model = () => bridge.get().content;
   const localized = text => Object.fromEntries(locales.map(l => [l, l === locale() ? text : '']));
   const safeURL = portfolioCmsSafeURL;
@@ -166,7 +168,10 @@ window.PortfolioCmsAdvanced = function (bridge) {
       const a=document.createElement('a'); a.dataset.cmsAddedLink=link.id; a.href=link.href; a.textContent=link.label[locale()] || '…';
       owner.append(a);
     });
-    navigation(); refreshTree();
+    navigation();
+    localizedControls.forEach((label, el) => { el.textContent = t(label); });
+    if (panel) panel.setAttribute('aria-label', t('Content manager'));
+    refreshTree();
     if(selected && !panel?.hidden && selected.isConnected) select(selected);
   }
   function navigation() {
@@ -197,8 +202,8 @@ window.PortfolioCmsAdvanced = function (bridge) {
     },{rootMargin:'-15% 0px -65% 0px'});
     m.sections.forEach(s=>observer.observe(sectionNodes.get(s.id)));
   }
-  function button(label, action, parent, cls) {
-    const b=document.createElement('button'); b.type='button'; b.textContent=label; if(cls)b.className=cls;
+  function button(label, action, parent, cls, literal = false) {
+    const b=document.createElement('button'); b.type='button'; b.textContent=literal ? label : t(label); if(cls)b.className=cls;
     b.addEventListener('click',action); parent.append(b); return b;
   }
   function change(action) { bridge.finish(); action(); bridge.change(); }
@@ -208,19 +213,19 @@ window.PortfolioCmsAdvanced = function (bridge) {
     tree.replaceChildren();
     model().sections.forEach(s=>{
       const row=document.createElement('div'); row.className='cms-tree-row'; row.dataset.section=s.id;
-      button(sectionNodes.get(s.id).querySelector('h1,h2')?.textContent || 'Untitled section',()=>select(sectionNodes.get(s.id).querySelector('h1,h2')),row);
-      button('↑',()=>change(()=>move(model().sections,s.id,-1)),row).ariaLabel='Move section up';
-      button('↓',()=>change(()=>move(model().sections,s.id,1)),row).ariaLabel='Move section down';
-      if(s.id!=='home') button('Delete',()=>{ if(confirm('Delete this section from the draft?'))change(()=>model().sections=model().sections.filter(x=>x.id!==s.id)); },row);
+      button(sectionNodes.get(s.id).querySelector('h1,h2')?.textContent || t('Untitled section'),()=>select(sectionNodes.get(s.id).querySelector('h1,h2')),row,undefined,true);
+      button('↑',()=>change(()=>move(model().sections,s.id,-1)),row).ariaLabel=t('Move section up');
+      button('↓',()=>change(()=>move(model().sections,s.id,1)),row).ariaLabel=t('Move section down');
+      if(s.id!=='home') button('Delete',()=>{ if(confirm(t('Delete this section from the draft?')))change(()=>model().sections=model().sections.filter(x=>x.id!==s.id)); },row);
       if(containers.has(s.id)) button('+ Entry',()=>addEntry(s),row,'cms-add-entry');
       tree.append(row);
       s.entries.forEach(e=>{
         const r=document.createElement('div');r.className='cms-tree-row cms-tree-entry';r.dataset.entry=e.id;
         const node=entryNodes.get(e.id);
-        button(node.querySelector('h3,strong')?.textContent || 'Untitled entry',()=>{node.scrollIntoView({block:'center'}); select(node.querySelector('h3,strong'));},r);
-        button('↑',()=>change(()=>move(s.entries,e.id,-1)),r).ariaLabel='Move entry up';
-        button('↓',()=>change(()=>move(s.entries,e.id,1)),r).ariaLabel='Move entry down';
-        button('Delete',()=>{if(confirm('Delete this entry from the draft?'))change(()=>s.entries=s.entries.filter(x=>x.id!==e.id));},r);
+        button(node.querySelector('h3,strong')?.textContent || t('Untitled entry'),()=>{node.scrollIntoView({block:'center'}); select(node.querySelector('h3,strong'));},r,undefined,true);
+        button('↑',()=>change(()=>move(s.entries,e.id,-1)),r).ariaLabel=t('Move entry up');
+        button('↓',()=>change(()=>move(s.entries,e.id,1)),r).ariaLabel=t('Move entry down');
+        button('Delete',()=>{if(confirm(t('Delete this entry from the draft?')))change(()=>s.entries=s.entries.filter(x=>x.id!==e.id));},r);
         tree.append(r);
       });
     });
@@ -230,11 +235,11 @@ window.PortfolioCmsAdvanced = function (bridge) {
       const template=s.entries[0]?.template || (s.id==='education'?'education-entry-1':s.id==='personal'?'personal-entry-0':'experience-entry-0');
       const e={id:uid(),template};s.entries.push(e);
       const el=createEntry(e), title=el.querySelector('h3,strong');
-      model().fields[title.dataset.cmsRef]=localized('New entry');
+      model().fields[title.dataset.cmsRef]=localized(t('New entry'));
     });
   }
   function field(label,value,multiline=false) {
-    const wrap=document.createElement('label');wrap.textContent=label;
+    const wrap=document.createElement('label');wrap.textContent=t(label);
     const input=document.createElement(multiline?'textarea':'input');input.value=value || '';wrap.append(input);form.append(wrap);return input;
   }
   function select(el) {
@@ -242,29 +247,31 @@ window.PortfolioCmsAdvanced = function (bridge) {
     selected=el; panel.hidden=false;
     document.querySelectorAll('.cms-selected').forEach(x=>x.classList.remove('cms-selected'));el.classList.add('cms-selected');
     form.replaceChildren();
-    selectionLabel.textContent='Selected · '+locale().toUpperCase();
+    selectionLabel.textContent=t('Selected')+' · '+locale().toUpperCase();
     const key=el.dataset.cmsRef, img=el.matches('img'), link=el.closest('a');
     const editableText=!img && !el.querySelector('svg,img,input,button') && !el.matches('section,#footerCopy');
     const value=editableText ? field('Text / rich text',el.innerHTML,true):null;
     if(value) {
-      const preview=document.createElement('div');preview.className='cms-rich';preview.contentEditable='true';preview.innerHTML=bridge.sanitize(value.value);form.append(preview);value.hidden=true;
+      const preview=document.createElement('div');preview.className='cms-rich';preview.contentEditable='true';preview.setAttribute('role','textbox');preview.setAttribute('aria-multiline','true');preview.setAttribute('aria-label',t('Text / rich text'));preview.innerHTML=bridge.sanitize(value.value);form.append(preview);value.hidden=true;
       preview.addEventListener('input',()=>{value.value=bridge.sanitize(preview.innerHTML);});
       ['bold','italic','insertParagraph','insertLineBreak'].forEach(cmd=>button(cmd,()=>{preview.focus();document.execCommand(cmd);value.value=bridge.sanitize(preview.innerHTML);},form));
-      button('Insert link',()=>{const url=prompt('Link URL');if(url && safeURL(url,false)){preview.focus();document.execCommand('createLink',false,url);value.value=bridge.sanitize(preview.innerHTML);}},form);
+      button('Insert link',()=>{const url=prompt(t('Link URL'));if(url && safeURL(url,false)){preview.focus();document.execCommand('createLink',false,url);value.value=bridge.sanitize(preview.innerHTML);}},form);
     }
     const href=link ? field('Link destination',link.getAttribute('href')):null;
     const src=img ? field('Image URL (or choose a file)',el.getAttribute('src')):null;
     const alt=img ? field('Alternative text',el.alt):null;
     if(img) {
       const file=field('Upload PNG / JPEG / WebP / GIF','');file.type='file';file.accept='image/png,image/jpeg,image/webp,image/gif';
-      file.addEventListener('change',()=>{const f=file.files[0];if(!f)return;if(f.size>2000000 || !/^image\/(png|jpeg|webp|gif)$/.test(f.type)){alert('Choose an image under 2 MB.');return;}const reader=new FileReader();reader.onload=()=>{src.value=reader.result;};reader.readAsDataURL(f);});
+      file.addEventListener('change',()=>{const f=file.files[0];if(!f)return;if(f.size>2000000 || !/^image\/(png|jpeg|webp|gif)$/.test(f.type)){alert(t('Choose an image under 2 MB.'));return;}const reader=new FileReader();reader.onload=()=>{src.value=reader.result;};reader.readAsDataURL(f);});
     }
-    missing.textContent=key ? 'Missing translations: '+locales.filter(l=> {
+    const pending=locales.filter(l=> {
       if(model().fields[key]) return !model().fields[key][l];
       return el.closest('[data-cms-new]')!==null;
-    }).join(', ').toUpperCase() : '';
+    });
+    missing.textContent = pending.length ? t('Missing translations') + ' · ' + pending.join(', ').toUpperCase() : '';
+    if (img && (!src.value || !alt.value)) missing.textContent += ' ' + t('Missing image URL or alternative text.');
     button('Apply',()=>{
-      if(href && !safeURL(href.value,false) || src && !safeURL(src.value,true)) {alert('Use a valid HTTP(S), relative image URL, mailto, tel or page anchor.');return;}
+      if(href && !safeURL(href.value,false) || src && !safeURL(src.value,true)) {alert(t('Use a valid HTTP(S), relative image URL, mailto, tel or page anchor.'));return;}
       change(()=>{
         if(el.dataset.cmsAddedLink) {const added=model().links.find(l=>l.id===el.dataset.cmsAddedLink);added.label[locale()]=value.value;added.href=href.value;}
         else {
@@ -278,31 +285,32 @@ window.PortfolioCmsAdvanced = function (bridge) {
     const owner=el.closest('.entry-org,.contact-links,.hero-contacts,.quick-links') || el.closest(entrySelector)?.querySelector('.entry-org');
     if(owner) button('+ Link',()=>{
       form.replaceChildren();const label=field('Link label',''),url=field('Link destination','https://');
-      button('Add link',()=>{if(!safeURL(url.value,false)){alert('Invalid URL');return;}change(()=>model().links.push({id:uid(),owner:owner.dataset.cmsRef,href:url.value,label:localized(label.value)}));select(owner);},form);
+      button('Add link',()=>{if(!safeURL(url.value,false)){alert(t('Invalid URL'));return;}change(()=>model().links.push({id:uid(),owner:owner.dataset.cmsRef,href:url.value,label:localized(label.value)}));select(owner);},form);
     },form);
     if(el.dataset.cmsAddedLink) button('Delete link',()=>change(()=>model().links=model().links.filter(l=>l.id!==el.dataset.cmsAddedLink)),form);
     else if(link && !link.closest('.sidebar-nav,.top-nav,.quick-links,.footer-links')) button('Delete link',()=>{
-      if(confirm('Remove this link from the draft?'))change(()=>model().attributes[link.dataset.cmsRef]={...model().attributes[link.dataset.cmsRef],removed:true});
+      if(confirm(t('Remove this link from the draft?')))change(()=>model().attributes[link.dataset.cmsRef]={...model().attributes[link.dataset.cmsRef],removed:true});
     },form);
   }
   function mount(actions) {
     panel=document.createElement('aside');panel.id='cmsInspector';panel.dataset.cmsUi='';panel.hidden=true;panel.setAttribute('aria-label','Content manager');
-    const heading=document.createElement('h2');heading.textContent='Content manager';panel.append(heading);
-    button('Close',()=>panel.hidden=true,panel);
+    const heading=document.createElement('h2');heading.textContent=t('Content manager');panel.append(heading);localizedControls.set(heading,'Content manager');
+    const fixed = (label, action, parent, cls) => localizedControls.set(button(label, action, parent, cls), label);
+    fixed('Close',()=>panel.hidden=true,panel,'cms-inspector-close');
     selectionLabel=document.createElement('h3');panel.append(selectionLabel);
     missing=document.createElement('p');missing.className='cms-missing';panel.append(missing);
     form=document.createElement('div');panel.append(form);
-    button('+ Section',()=>change(()=>{const id=uid();model().sections.push({id,template:'custom',entries:[]});structure();const h=sectionNodes.get(id).querySelector('h2');model().fields[h.dataset.cmsRef]=localized('New section');}),panel,'cms-add-section');
+    fixed('+ Section',()=>change(()=>{const id=uid();model().sections.push({id,template:'custom',entries:[]});structure();const h=sectionNodes.get(id).querySelector('h2');model().fields[h.dataset.cmsRef]=localized(t('New section'));}),panel,'cms-add-section');
     tree=document.createElement('div');panel.append(tree);document.body.append(panel);
-    button('Content',()=>{panel.hidden=!panel.hidden;refreshTree();},actions,'cms-content');
-    button('Export JSON',()=>{
+    fixed('Content',()=>{panel.hidden=!panel.hidden;refreshTree();},actions,'cms-content');
+    fixed('Export JSON',()=>{
       const blob=new Blob([JSON.stringify(bridge.getDraft(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='portfolio-draft.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
     },actions,'cms-export');
     const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.hidden=true;actions.append(input);
-    input.addEventListener('change',async()=>{try {const f=input.files[0];if(!f)return;if(f.size>12000000)throw new Error('File too large');const value=JSON.parse(await f.text());if(![1,3].includes(value.version))throw new Error('Unsupported draft version');normalize(value.content);bridge.importDraft(value);}catch(e){alert('Import failed: '+e.message);}finally{input.value='';}});
-    button('Import JSON',()=>input.click(),actions,'cms-import');
+    input.addEventListener('change',async()=>{try {const f=input.files[0];if(!f)return;if(f.size>12000000)throw new Error('File too large');const value=JSON.parse(await f.text());if(![1,3].includes(value.version))throw new Error('Unsupported draft version');normalize(value.content);bridge.importDraft(value);}catch(e){alert(t('Import failed. Check the JSON file and its version.'));}finally{input.value='';}});
+    fixed('Import JSON',()=>input.click(),actions,'cms-import');
     document.addEventListener('click',event=>{
-      if(!editing || event.target.closest('[data-cms-ui],#cmsToolbar,.lang-switch,.accent-picker') || event.target.closest('button') && !event.target.matches('img'))return;
+      if(!editing || event.target.closest('[data-cms-ui],#cmsToolbar,.lang-switch,.accent-picker,summary') || event.target.closest('button') && !event.target.matches('img'))return;
       const el=event.target.closest('[data-cms-added-link],img,[data-cms-key],h2,h3,p,strong,.entry-meta,.entry-org,a');
       if(!el || !el.dataset.cmsRef && !el.dataset.cmsAddedLink)return;
       if(el.closest('a')) event.preventDefault();
