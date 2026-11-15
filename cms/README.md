@@ -1,4 +1,40 @@
-# Portfolio CMS — architecture and Phase 1 migration
+# Portfolio CMS
+
+## Phase 4 · GitHub publication to the development branch
+
+Use the editor on the dedicated HTTPS publisher origin at `/?cms=edit`. GitHub Pages serves static files, so the publisher serves this same editor beside its authenticated API. Open **Publish draft**, select **Connect GitHub**, follow **Authorize on GitHub** in a new tab, then return and select **Check connection**. Keep the editor tab open to preserve working changes during sign-in. The editor on a static host still supports local editing.
+
+Select the current draft by opening or importing it in the visual editor. Apply inspector changes before review. **Review current draft** switches the page to visual preview and validates a copy on the server. Close the dialog to inspect the page in each language. The dialog shows whether the snapshot creates or replaces the file, the branch and reviewed commit, and the full draft JSON. Reopen it and select **Confirm development publish**. The resulting link opens the GitHub commit.
+
+The only file a publication can write is `cms/content/published.v3.json` on `feature/portfolio-cms-phase-4`. The snapshot includes the v3 section and entry order, four locale dictionaries and overrides, link/image attributes, added links, and any included raster uploads. The public repository exposes that file and its history immediately to anyone, including before a Pages release. The site does not load this development snapshot. A release renderer and an approved Pages release are still Phase 5 work.
+
+Use **Save draft** or **Export JSON** for persistence. Browsers isolate local storage by origin. Export from the old editor origin and import on the publisher origin to move an existing draft. A conflict or lost response leaves the working copy untouched. Select **Review current draft** again to compare against the latest branch head. If GitHub committed an identical snapshot before a response was lost, the new review displays it as unchanged.
+
+### Architecture and permissions
+
+- A private GitHub App installed on the portfolio repository uses the OAuth web application flow with single-use state, PKCE S256, a fixed callback and a repository-bound, expiring user access token. The token can use only permissions shared by the installation and the signed-in user. Enable repository **Contents: Read and write** and implicit **Metadata: Read**. Keep all other permissions disabled. The server checks the numeric owner account ID, installation and repository ID. GitHub enforces the write permission. [GitHub App authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)
+- The GitHub token lives in a single publisher process. The browser receives an opaque, host-only, HttpOnly, Secure, SameSite=Lax session cookie. Login state expires after five minutes and the session expires after at most 30 minutes. Refresh tokens are discarded. POST endpoints require the exact configured Origin, JSON and an application header, with no cross-origin API access. Disconnect ends the local session and requests GitHub token revocation. Expired sessions and service restarts require reconnecting. Project owners can revoke the application authorization from [GitHub application settings](https://github.com/settings/apps/authorizations). [GitHub token revocation API](https://docs.github.com/en/rest/apps/oauth-applications#delete-an-app-token)
+- The server applies `content.schema.json`, structural and ID checks, a rich-text and URL allowlist, image signature and size checks, and credential detection before review or publish. The scanner checks the active publisher credentials, common credential formats and credential-like assignments in text, including some encoded and split forms. It cannot detect every secret, encrypted image metadata or text visible only in pixels. The review binds the exact canonical JSON and branch head for ten minutes. GitHub's `expectedHeadOid` guards the atomic commit against a concurrent push. File, branch, repository and commit message are server constants. GitHub grants Contents permission at repository level, so protect `main` independently. [GraphQL commit mutation](https://docs.github.com/en/graphql/reference/commits#createcommitonbranch)
+
+### One-time setup
+
+1. In the portfolio repository, check **Settings → Pages**. Keep the existing production source on `main`, or if using Actions ensure only the production branch can deploy. Do not configure this development branch or publisher origin as the public Pages source. Under **Settings → Rules → Rulesets**, protect `main` with a pull request requirement and no bypass for the publishing app or authorizing account. [Pages source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) · [GitHub rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository)
+2. Choose a dedicated hostname with HTTPS for the publisher. Create a [GitHub App under your account](https://github.com/settings/apps/new). Use that hostname as the homepage and `https://YOUR-PUBLISHER-HOST/auth/callback` as the callback. Disable webhook delivery and device flow, enable expiring user tokens, and set installation availability to **Only on this account**. Give it **Contents: Read and write** and leave the other optional permissions off. Install it using **Only select repositories** and select `oriolroigescobedo.github.io` only. Generate a client secret in the app settings. This flow requires no app private key. [Register a GitHub App](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app)
+3. On the publisher host, check out `feature/portfolio-cms-phase-4` and install the Python 3.12 dependencies with `python -m pip install -r publisher/requirements.txt`. Set these environment variables for the service through the host's configuration or secret manager.
+
+   | Variable | Value |
+   | --- | --- |
+   | `CMS_ORIGIN` | The dedicated HTTPS origin with no trailing slash or path |
+   | `CMS_CLIENT_ID` | Client ID in the GitHub App settings |
+   | `CMS_CLIENT_SECRET` | Client secret entered directly in the host's secret manager |
+   | `CMS_USER_ID` | Numeric `id` from [your GitHub user record](https://api.github.com/users/oriolroigescobedo) |
+   | `CMS_REPO_ID` | Numeric `id` from [the GitHub repository record](https://api.github.com/repos/oriolroigescobedo/oriolroigescobedo.github.io) |
+   | `CMS_INSTALLATION_ID` | Number at the end of the installed app's configuration URL in [GitHub installations](https://github.com/settings/installations) |
+
+4. Start `python -m publisher.app` from the checkout root under a service manager. It listens on `127.0.0.1:8080`. Terminate TLS at a reverse proxy for the chosen hostname, forward requests to that loopback address, and keep one publisher process per hostname. Allow JSON bodies up to 12 MB and use an upstream response timeout of at least 75 seconds. Disable request/response body capture, inbound header capture and OAuth callback query logging at the proxy and in monitoring. Rate-limit `/api/login` at the proxy, for example 10 requests per client per minute. Never paste the secret in Git, chat, terminal history or static host settings. To revoke access immediately, uninstall/suspend the GitHub App or revoke its user authorization; when rotating the client secret, restart the service and remove the previous secret in GitHub.
+5. Open the HTTPS editor and confirm a real GitHub login and installation. When ready to verify the live integration, review and explicitly confirm a non-sensitive development draft. Check that the resulting commit contains exactly the snapshot file and that Pages still serves production. Before a public release, integrate and test a release renderer and approve the specific content and release.
+
+The Phase 4 dialog and Phase 3 advanced panel are in English. This affects usability across the four interface languages, including the comprehension of the confirmation step. The browser tests exercise the dialog and its status feedback; a manual keyboard, focus, screen-reader and responsive acceptance review remains open.
 
 ## Phase 3 usage (development branch only)
 
@@ -12,7 +48,7 @@ Switch EN/ES/CA/FR using the original language buttons. New text is blank in unt
 
 `content.schema.json` now describes the live v3 envelope. `content.sections` stores stable section/entry identities and trusted template references; `content.fields` stores localized sanitized HTML overrides; `content.attributes` stores URLs and localized image alt text; `content.links` stores added component links. The existing translation-key editing model is retained rather than replaced. Original proposed schema definitions remain available for the future publishing adapter.
 
-The normal public URL does not activate the editor or render local drafts. There is no publication endpoint. Never put secrets in draft JSON or source code. Phase 4 must add authenticated publication and a renderer for the validated draft model. Read the current limitations and verified results in `PROJECT_STATUS.md`.
+The normal public URL does not activate the editor or render local drafts. The Phase 4 service provides the publication endpoint on its separate HTTPS origin. Read the current limitations and verified results in `PROJECT_STATUS.md`.
 
 Validation: `python tests/editor_phase3.py`, `python tests/editor_phase2.py`, `python tests/validate_phase1.py`, `python tests/browser_parity.py`. Install Playwright, Pillow, NumPy and jsonschema plus Chromium. An optional `CMS_BROWSER` environment variable selects an installed Chrome executable. CI uses Playwright Chromium on Linux and uploads Phase 3 screenshots.
 
@@ -51,7 +87,7 @@ This phase separates translations but **does not** pretend every text is editabl
 - GitHub Actions verified the migration and full-page browser rendering. Additional manual exploration of accent selection, sidebar menu, automatic scrolling and other controls before production merge is still recommended.
 
 ## Security
-Static GitHub Pages cannot protect an in-browser hard-coded password. Never commit PATs, passwords, secrets or client tokens. Admin publication must require GitHub authorization (prefer an OAuth intermediary; an explicitly entered, session-only fine-grained token may be an interim prototype).
+Static GitHub Pages cannot protect an in-browser hard-coded password. The supported publication flow uses the separate GitHub App service described above.
 
 ## Recommended next action
 1. Inspect workflow status on the feature branch.

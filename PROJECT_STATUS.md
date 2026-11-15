@@ -1,12 +1,20 @@
 # Portfolio CMS — Project Status
 
-Updated: 2026-11-14
+Updated: 2026-11-15
 Repository: `oriolroigescobedo/oriolroigescobedo.github.io`
-Working branch: `feature/portfolio-cms-phase-3`
+Working branch: `feature/portfolio-cms-phase-4`
 Production branch: `main` — **DO NOT MODIFY**
 
 ## Objective
 Preserve the original public portfolio while gradually enabling on-page direct visual edits, dynamic navigation/sections, four locales and secure GitHub-based publication.
+
+## Phase 4 — authenticated development publication
+
+- Verified the Phase 3 branch head `91c226f9a78d3330f93deeba319437c374c9a065` against GitHub and confirmed the successful Phase 3 workflow run [43542459946](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43542459946). Phase 4 was branched from that head.
+- Added a separate same-origin HTTPS editor and publisher service using GitHub App OAuth, PKCE, an allowlisted account and installation, temporary server-side sessions, and GitHub repository Contents access. A reviewed v3 snapshot can be committed only to `cms/content/published.v3.json` on `feature/portfolio-cms-phase-4`. The GitHub head precondition prevents overwriting a concurrent change.
+- The existing visual editing, local draft storage, v1 migration and v3 import/export are retained. The development snapshot is a publicly readable commit in the portfolio repository. The normal site does not load that snapshot. Deployment or a public release remains separate work.
+- Local startup requires a configured HTTPS host and a GitHub App installation. Automated publisher tests use an API double. Real GitHub sign-in and real draft publication require the owner's setup and a specific confirmation. See [cms/README.md](cms/README.md) for setup, revocation and recovery.
+- Localization remains pending for the English-only advanced panel and publication dialog. This can affect understanding of the confirmation step without changing server access controls. Manual keyboard, focus, screen-reader and responsive acceptance is still pending. The public renderer for committed snapshots is also pending.
 
 ## Phase 3 — implementation checkpoint (2026-11-14)
 - Started from verified Phase 2 head `fe1f007755716b6ebd0421ceabe40ceba6b9b8e6`. The latest Phase 2 run is **43539708807**, successful (newer than the supplied run 43539500137).

@@ -31,6 +31,7 @@ for (mime,payload),item in zip(image_data,manifest):
 html=html.replace('  <link rel="stylesheet" href="./cms/editor.css">\n','',1)
 html=html.replace('  <script src="./cms/editor.js"></script>\n','',1)
 html=html.replace('  <script src="./cms/advanced.js"></script>\n','',1)
+html=html.replace('  <script src="./cms/publish.js"></script>\n','',1)
 normalized=html.replace('<link rel="stylesheet" href="./assets/site.css">',style.group(0),1)
 normalized=normalized.replace('<script src="./cms/content/translations.js"></script>\n  <script src="./assets/site.js"></script>',script.group(0),1)
 for item,(mime,payload) in zip(manifest,image_data):
