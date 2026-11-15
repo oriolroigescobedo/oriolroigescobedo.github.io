@@ -2,11 +2,23 @@
 
 Updated: 2026-11-15
 Repository: `oriolroigescobedo/oriolroigescobedo.github.io`
-Working branch: `feature/portfolio-cms-phase-4`
+Working branch: `feature/portfolio-cms-phase-5`
 Production branch: `main` — **DO NOT MODIFY**
 
 ## Objective
 Preserve the original public portfolio while gradually enabling on-page direct visual edits, dynamic navigation/sections, four locales and secure GitHub-based publication.
+
+## Phase 5 — integration and release review
+
+- Started from the verified Phase 4 head [`8690fcf`](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/commit/8690fcfe34f714a61bd6d62ae7265fbcb2dbbd5f) after confirming the successful Phase 4 workflow [43744433351](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43744433351).
+- The normal portfolio loads the same-origin `cms/content/published.v3.json` and renders it through the existing components. Without a compatible snapshot, the baseline portfolio is used. The public route does not read browser-stored drafts. Edit mode starts from the published snapshot if there is no readable local draft.
+- The advanced panel and publication dialog support EN, ES, CA and FR. The dialog flags partial translations in new content and offers an explicit review and confirmation. The publisher can write only the snapshot path on the Phase 5 branch. Existing origin, JSON, OAuth/PKCE, session expiry, repository ID, installation and head checks continue to apply.
+- [GitHub Actions 43750434974](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43750434974) passed at `1c91180b2ef0fadb95bae6af6f2afa3b0e275f74`. It ran the baseline preservation tests, seven publisher tests, browser publisher integration, Phase 2 and 3 browser regressions, all 16 visual comparisons with zero measured differences and the published-renderer tests at 1440px, 820px and 390px across all four locales. Publication tests use a GitHub API double. The initial Phase 5 run [43750289867](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43750289867) identified the loss of detailed import errors. The [corrective commit](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/commit/1c91180b2ef0fadb95bae6af6f2afa3b0e275f74) restored and translated those details.
+- Windows Chrome passed the Phase 2 and 3 browser regressions, publisher integration and committed-renderer checks. At 820px it also passed language-specific editor controls, keyboard opening and dismissal of the publication dialog, focus restoration and the eight theme/accent pairs.
+- Windows Chrome matched the DOM in all 16 parity comparisons on two Phase 5 passes. The second pass reproduced the exact same 418-pixel mask as the historical Phase 4 desktop French-light screenshot, solely inside the portrait at x=374–550 and y=147–402. Both passes also observed isolated 267-pixel portrait differences at mobile size in varying cases. The original-to-original and fresh original-to-Phase-4 controls both measured zero in all 16 cases. Together with identical JPEG bytes and unchanged portrait CSS, this identifies the discrepancy as intermittent Windows Chrome rendering of the existing portrait. The exact decoder or rasterization cause is unconfirmed. The Windows parity test still failed on the affected passes, and the comparison threshold is unchanged.
+- Implementation commits on GitHub are [`66bc649`](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/commit/66bc64940bca1eeb1ae20271d1f8eef06c98eac0) for the committed renderer, [`7cb0169`](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/commit/7cb0169b64505f361711ef1aa54df13b0c8c9f83) for localization and CI, and [`1c91180`](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/commit/1c91180b2ef0fadb95bae6af6f2afa3b0e275f74) for import feedback.
+- The public GitHub API reported `main` at `8a51574bd49bb8a28b5a2e8815cc48e491fd0f26` with `protected: false` and no active rules returned. The Pages settings endpoint returned HTTP 404. The owner must verify the Pages source and configure branch protection before approving a production release.
+- Live OAuth, live publication, comprehensive accessibility acceptance (including contrast and screen-reader checks) and release approval remain open. The [administrator and release guide](cms/README.md) contains the host setup, recovery steps and acceptance checklist.
 
 ## Phase 4 — authenticated development publication
 

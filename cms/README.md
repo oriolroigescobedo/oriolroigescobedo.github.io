@@ -1,6 +1,38 @@
 # Portfolio CMS
 
+## Fase 5 · Guia d’administració
+
+1. Obre `https://EL-TEU-SERVIDOR/?cms=edit`. Per restaurar un esborrany d’un altre navegador o domini, selecciona **Importar JSON**.
+2. Clica el text de la pàgina per editar-lo. Al **Gestor de contingut**, aplica els canvis de format, URL, imatge o text alternatiu. Des de **Contingut** pots afegir, eliminar i ordenar seccions i entrades. El menú lateral segueix l’ordre de les seccions.
+3. Canvia d’idioma amb EN, ES, CA i FR. Completa els textos pendents i comprova la pàgina amb **Previsualitzar**. **Desar esborrany** desa al navegador del dispositiu. **Cancel·lar canvis** restaura la còpia desada o el contingut inicial. **Exportar JSON** et permet fer una còpia independent.
+4. Tria **Publica l’esborrany**, **Connecta GitHub**, **Autoritza a GitHub** i, quan tornis a l’editor, **Comprova la connexió**. Revisa el resum, els idiomes pendents i el JSON amb **Revisa l’esborrany**. Pots tancar el diàleg per comprovar la previsualització.
+5. Quan vulguis guardar aquesta versió a GitHub, tria **Confirma la publicació a desenvolupament**. El commit només escriu `cms/content/published.v3.json` a `feature/portfolio-cms-phase-5`. El fitxer és visible a GitHub tan bon punt es publica. Si la branca ha canviat o la connexió s’ha perdut, conserva l’esborrany i torna a revisar-lo. Si el primer intent ja havia escrit el mateix contingut, la revisió següent l’identifica com a coincident.
+
+La pàgina normal llegeix el JSON disponible al mateix lloc des d’on se serveix el portfolio. Sense un fitxer compatible, es mostra el contingut original. Els esborranys desats al navegador són exclusius de l’editor. Actualitza el checkout del servidor de desenvolupament al commit revisat per veure el nou JSON des d’aquell servidor.
+
+### Configurar i verificar el servidor de desenvolupament
+
+- Segueix els passos de la GitHub App i les variables de configuració de **One-time setup**. A la fase 5, fes servir un host HTTPS dedicat i el checkout de `feature/portfolio-cms-phase-5`. Configura el callback exacte `https://EL-TEU-SERVIDOR/auth/callback` i instal·la l’app només al repositori del portfolio.
+- A **Settings → Pages**, comprova que la font sigui `main` o que el workflow de producció només desplegui des de `main`. A **Settings → Rules → Rulesets**, requereix pull request per a `main` i verifica que l’app i el compte d’administració no tinguin bypass. Aquestes opcions s’han de verificar al repositori.
+- Prova el login real amb el teu compte. En una finestra privada, comprova que la UI demani connectar GitHub abans de revisar o publicar. Amb el compte correcte, fes una publicació de prova amb contingut no sensible després de revisar-lo i comprova el fitxer, el commit i la branca. Desconnecta al final.
+
+### Còpia, desplegament i reversió
+
+- Abans de cada publicació, exporta el JSON i guarda el SHA de la versió aprovada i, si existeix, una còpia de `published.v3.json`. Fes servir una ubicació privada per a aquestes còpies.
+- Abans d’aprovar un desplegament, verifica els workflows del commit exacte, el resultat de l’OAuth real, les regles de `main`, la font de Pages i l’acceptació en els quatre idiomes. Revisa el JSON que anirà al públic. Promou només la versió aprovada mitjançant una pull request revisada.
+- Per revertir contingut a desenvolupament, importa la còpia bona i passa de nou per la revisió i la confirmació. Per revertir una publicació de producció després de l’aprovació, crea una pull request que reverteixi el commit de publicació o recuperi el JSON de l’últim SHA aprovat. Comprova el nou resultat de Pages i la pàgina pública. Si cal recuperar el contingut original, retira el fitxer de publicació mitjançant aquest mateix flux.
+
+### Acceptació abans de producció
+
+- [x] GitHub Actions de fase 5 en verd per al codi de `1c91180`. Torna a validar si el codi o el contingut que es vol promocionar canvien. [Execució 43750434974](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43750434974)
+- [ ] Edició, desament, importació, exportació, cancel·lació i previsualització en EN, ES, CA i FR.
+- [ ] Escriptori, tauleta i mòbil amb els dos temes i els quatre accents. Completa la comprovació de contrast i lector de pantalla. Les proves de teclat i restauració del focus del diàleg han passat a Chrome.
+- [ ] Login i sortida reals, revisió i publicació de prova amb l’app instal·lada, i confirmació del fitxer i la branca.
+- [ ] Proteccions de `main`, font de Pages, còpia de seguretat, procediment de reversió i aprovació explícita.
+
 ## Phase 4 · GitHub publication to the development branch
+
+Historical Phase 4 reference. For the currently supported branch and renderer, use the Phase 5 guide above. The GitHub App and HTTPS setup steps below still apply with the Phase 5 checkout.
 
 Use the editor on the dedicated HTTPS publisher origin at `/?cms=edit`. GitHub Pages serves static files, so the publisher serves this same editor beside its authenticated API. Open **Publish draft**, select **Connect GitHub**, follow **Authorize on GitHub** in a new tab, then return and select **Check connection**. Keep the editor tab open to preserve working changes during sign-in. The editor on a static host still supports local editing.
 
