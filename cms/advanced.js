@@ -307,7 +307,21 @@ window.PortfolioCmsAdvanced = function (bridge) {
       const blob=new Blob([JSON.stringify(bridge.getDraft(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='portfolio-draft.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
     },actions,'cms-export');
     const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.hidden=true;actions.append(input);
-    input.addEventListener('change',async()=>{try {const f=input.files[0];if(!f)return;if(f.size>12000000)throw new Error('File too large');const value=JSON.parse(await f.text());if(![1,3].includes(value.version))throw new Error('Unsupported draft version');normalize(value.content);bridge.importDraft(value);}catch(e){alert(t('Import failed. Check the JSON file and its version.'));}finally{input.value='';}});
+    input.addEventListener('change', async () => {
+      try {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 12000000) throw new Error('File too large');
+        const value = JSON.parse(await file.text());
+        if (![1,3].includes(value?.version)) throw new Error('Unsupported draft version');
+        bridge.importDraft(value);
+      } catch (error) {
+        const detail = error instanceof SyntaxError ? '' : t(error.message);
+        alert(t('Import failed. Check the JSON file and its version.') + (detail ? ' ' + detail : ''));
+      } finally {
+        input.value = '';
+      }
+    });
     fixed('Import JSON',()=>input.click(),actions,'cms-import');
     document.addEventListener('click',event=>{
       if(!editing || event.target.closest('[data-cms-ui],#cmsToolbar,.lang-switch,.accent-picker,summary') || event.target.closest('button') && !event.target.matches('img'))return;
