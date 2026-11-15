@@ -1,5 +1,4 @@
-/* Portfolio CMS phase 2 — on-page, local-only draft editor.
-   URL opt-in is NOT authentication. Publishing requires Phase 4 GitHub OAuth. */
+/* Portfolio CMS — on-page draft editor. The URL opt-in only enables the UI. */
 (function () {
   'use strict';
   if (new URLSearchParams(window.location.search).get('cms') !== 'edit') return;
@@ -306,6 +305,12 @@
     });
   });
   advanced.mount(actions);
+  window.PortfolioCmsPublish?.(actions, function () {
+    finishActive();
+    editing = false;
+    updateUI();
+    return JSON.stringify(working);
+  });
   render();
   updateUI();
   window.PortfolioCmsEditor = Object.freeze({

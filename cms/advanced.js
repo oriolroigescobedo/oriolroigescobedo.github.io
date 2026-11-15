@@ -1,4 +1,4 @@
-/* Phase 3: trusted component templates + locale-aware data. No remote publication. */
+/* Trusted component templates and locale-aware draft data. */
 window.PortfolioCmsAdvanced = function (bridge) {
   'use strict';
   const locales = bridge.locales, clone = x => JSON.parse(JSON.stringify(x));
