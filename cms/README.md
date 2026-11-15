@@ -36,6 +36,8 @@ Use **Save draft** or **Export JSON** for persistence. Browsers isolate local st
 
 The Phase 4 dialog and Phase 3 advanced panel are in English. This affects usability across the four interface languages, including the comprehension of the confirmation step. The browser tests exercise the dialog and its status feedback; a manual keyboard, focus, screen-reader and responsive acceptance review remains open.
 
+[Phase 4 GitHub Actions run 43744433351](https://github.com/oriolroigescobedo/oriolroigescobedo.github.io/actions/runs/43744433351) passed the publisher unit and browser tests, the Phase 2 and Phase 3 regressions, and the 16 visual comparisons. The publisher tests exercise the actual server and UI against a GitHub API double. The owner setup above is required to test the installed app with GitHub.
+
 ## Phase 3 usage (development branch only)
 
 Open `index.html?cms=edit` using a local HTTP server. Click existing text to edit it directly. Selection also opens **Content manager**, where you can apply rich formatting, change link destinations, change an image URL or upload a raster image, and edit alternative text. Use **Apply** before leaving a panel field. **Save draft** persists the applied changes locally.
